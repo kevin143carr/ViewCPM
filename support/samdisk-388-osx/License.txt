@@ -1,0 +1,9 @@
+(c) 2002-2015 Simon Owen <simon@simonowen.com>
+
+SAMdisk is free for use by both commercial and non-commercial applications.
+Redistribution is permitted in its original unmodified form only.
+
+THIS PROGRAM IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, NOT EVEN THE
+IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+BY USING THE PROGRAM, YOU AGREE TO BEAR ALL RISKS AND LIABILITIES ARISING FROM
+THE USE OF THE PROGRAM.
