@@ -7,13 +7,36 @@ import viewcpm_prefs as prefs
 # ----------------------------
 # Utilities
 # ----------------------------
+def run_command(cmd, use_diskdefs=False, prefs=None):
+    """
+    Run shell command and return (success, output).
 
-def run_command(cmd):
-    """Run shell command and return (success, output)."""
+    Parameters:
+        cmd (str): Command to run.
+        cwd (str|None): Optional working directory.
+        use_diskdefs (bool): If True, set CPMTOOLS to prefs['diskdefs_path'].
+        prefs (dict|None): Preferences dict containing diskdefs_path.
+    """
     try:
-        result = subprocess.run(cmd, shell=True, check=True,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                text=True)
+        env = os.environ.copy()
+        if use_diskdefs and prefs:
+            env['CPMTOOLS'] = prefs
+            
+        if use_diskdefs:
+            cwd = os.path.dirname(prefs)  # get directory
+        else:
+            cwd = None
+
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            cwd=cwd,
+            env=env
+        )
         return True, result.stdout
     except subprocess.CalledProcessError as e:
         return False, e.stderr
@@ -75,7 +98,7 @@ def list_image_files(cpmtools_path, raw_path, disk_format="kpii"):
         raise FileNotFoundError(f"cpmls not found in {cpmtools_path}")
 
     cmd = f'"{cpmls}" -f {disk_format} -l "{raw_path}"'
-    success, output = run_command(cmd)
+    success, output = run_command(cmd, True, prefs.get_pref("diskdefs_path"))
     files = []
     if success:
         for line in output.splitlines():
