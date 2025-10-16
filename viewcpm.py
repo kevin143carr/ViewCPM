@@ -169,6 +169,9 @@ class ViewCPMApp(tk.Tk):
         ttk.Label(left_frame, text="Host Folder", font=("TkDefaultFont", 10, "bold")).pack(anchor="w")
         self.folder_tree = self.create_treeview(left_frame)
         self.folder_tree.pack(fill=tk.BOTH, expand=True)
+        # Label to show current folder under the treeview
+        self.host_folder_var = tk.StringVar(value="Folder: N/A")
+        ttk.Label(left_frame, textvariable=self.host_folder_var).pack(anchor="w", pady=(2,0))        
         self.paned.add(left_frame, weight=1)
 
         # Right: Disk Image
@@ -327,6 +330,7 @@ class ViewCPMApp(tk.Tk):
             for f, size in files:
                 self.folder_tree.insert("", "end", values=(f, size))
             self.status_var.set(f"Loaded folder: {folder}")
+            self.host_folder_var.set(f"Folder: {folder}")        
 
     # ----------------------------
     # Disk Image
@@ -338,6 +342,7 @@ class ViewCPMApp(tk.Tk):
         if image_path:
             prefs.set_pref("last_image_folder", os.path.dirname(image_path))
             self._current_image_path = image_path
+            self.update_title(image_path)  # ShaZam! — update title bar with filename
             threading.Thread(target=self.convert_and_list_image, args=(image_path,), daemon=True).start()
 
     def convert_and_list_image(self, image_path):
@@ -346,6 +351,8 @@ class ViewCPMApp(tk.Tk):
             # Convert to RAW via SAMdisk
             raw_path = logic.convert_dsk_to_raw(self.samdisk_path, image_path)
             self._current_raw_path = raw_path
+            # ShaZam! — update title to show the loaded image
+            self.update_title(image_path)            
             self.disk_manager.set_current_raw(raw_path)
     
             # Determine selected disk format
