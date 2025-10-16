@@ -7,6 +7,8 @@ import viewcpm_logic as logic
 import viewcpm_prefs as prefs
 import viewcpm_utils as utils
 from viewcpm_diskops import DiskImageManager
+from viewcpm_diskdefs import DiskDefsManager
+
 
 # ----------------------------
 # Tooltip Helper
@@ -57,6 +59,15 @@ class ViewCPMApp(tk.Tk):
         # Preferences
         self.samdisk_path = prefs.get_pref("samdisk_path", "")
         self.cpmtools_path = prefs.get_pref("cpmtools_path", "")
+        self.diskdefs_path = prefs.get_pref("diskdefs_path", "")
+        
+        # Make prefs available on self
+        self.prefs = prefs  # <-- Add this line        
+        
+        # Diskdefs Manager
+        self.diskdefs_manager = None
+        if self.diskdefs_path and os.path.exists(self.diskdefs_path):
+            self.diskdefs_manager = DiskDefsManager(self.diskdefs_path)        
     
         # Disk manager
         self.disk_manager = DiskImageManager(self.cpmtools_path, status_callback=self.status_callback)
@@ -69,6 +80,17 @@ class ViewCPMApp(tk.Tk):
     
         # Schedule final window setup after idle
         self.after_idle(self.finish_setup)
+        
+    # -------------------------------------------------------------------------
+    # Diskdefs loader
+    # -------------------------------------------------------------------------
+    def _load_diskdefs(self):
+        """Load diskdefs from path in preferences if available."""
+        diskdefs_path = self.prefs.get("diskdefs_path")
+        if diskdefs_path and os.path.exists(diskdefs_path):
+            self.diskdefs_manager = DiskDefsManager(diskdefs_path)
+        else:
+            self.diskdefs_manager = None    
         
     def finish_setup(self):
         # Center window
@@ -96,6 +118,35 @@ class ViewCPMApp(tk.Tk):
         ttk.Button(toolbar, text="Insert", command=self.insert_file).pack(side=tk.LEFT, padx=2)
         ttk.Button(toolbar, text="Extract", command=self.extract_file).pack(side=tk.LEFT, padx=2)
         ttk.Button(toolbar, text="Delete", command=self.delete_file).pack(side=tk.LEFT, padx=2)
+    
+        # Get saved disk format from prefs
+        saved_format = self.prefs.get_pref("disk_format", "")
+        
+        # --- Disk Format Dropdown ---
+        disk_formats = []
+        if self.diskdefs_manager:
+            disk_formats = sorted(self.diskdefs_manager.get_disk_names(), key=str.lower)
+
+    
+        self.disk_format_var = tk.StringVar()
+        self.disk_format_combo = ttk.Combobox(
+            toolbar,
+            textvariable=self.disk_format_var,
+            values=disk_formats,
+            state="readonly",
+            width=20
+        )
+        
+        if saved_format and saved_format in disk_formats:
+            self.disk_format_combo.set(saved_format)
+        else:
+            self.disk_format_combo.set("Choose Disk Format")        
+        
+        self.disk_format_combo.pack(side=tk.LEFT, padx=6)
+        create_tooltip(self.disk_format_combo, "Select a disk format from diskdefs")
+    
+        self.disk_format_combo.bind("<<ComboboxSelected>>", self.on_disk_format_selected)
+        # ----------------------------
     
         settings_btn = ttk.Button(toolbar, text="Preferences", command=self.open_prefs_dialog)
         settings_btn.pack(side=tk.RIGHT, padx=2)
@@ -160,6 +211,27 @@ class ViewCPMApp(tk.Tk):
     def bind_events(self):
         # Drag-and-drop can be implemented later
         pass
+    
+    # ----------------------------
+    # Disk Format Selection
+    # ----------------------------
+    def on_disk_format_selected(self, event):
+        selected = self.disk_format_var.get()
+        if not selected or not self.diskdefs_manager:
+            return
+    
+        # Save to prefs
+        self.prefs.set_pref("disk_format", selected)
+    
+        # Optional info popup
+        info = self.diskdefs_manager.get_disk_info(selected)
+        if info:
+            disksize = info.get("disksize", 0)
+            size_kb = disksize / 1024
+            messagebox.showinfo(
+                "Disk Format Selected",
+                f"Selected: {selected}\nCalculated Size: {size_kb:.1f} KB"
+            )
 
     # ----------------------------
     # Preferences
@@ -216,6 +288,11 @@ class ViewCPMApp(tk.Tk):
                 entry_diskdefs.delete(0, tk.END)
                 entry_diskdefs.insert(0, path)
                 prefs.set_pref("diskdefs_path", path)
+                # Refresh dropdown if diskdefs changed
+                self.diskdefs_path = path
+                if os.path.exists(path):
+                    self.diskdefs_manager = DiskDefsManager(path)
+                    self.disk_format_combo["values"] = self.diskdefs_manager.get_disk_names()                
     
         tk.Button(dialog, text="Browse...", command=browse_diskdefs).pack(padx=10, pady=2)
     
@@ -266,15 +343,40 @@ class ViewCPMApp(tk.Tk):
     def convert_and_list_image(self, image_path):
         self.status_var.set(f"Converting {image_path} → tmp RAW")
         try:
+            # Convert to RAW via SAMdisk
             raw_path = logic.convert_dsk_to_raw(self.samdisk_path, image_path)
             self._current_raw_path = raw_path
             self.disk_manager.set_current_raw(raw_path)
-            self.status_var.set("Listing files...")
-            files = logic.list_image_files(self.cpmtools_path, raw_path, disk_format="kpii")
-            self.image_tree.after(0, self.populate_image_tree, files)
+    
+            # Determine selected disk format
+            disk_format = "kpii"  # default
+            if self.disk_format_var.get() and self.diskdefs_manager:
+                disk_format = self.disk_format_var.get()
+            self._current_disk_format = disk_format
+    
+            # List files from image
+            files = logic.list_image_files(self.cpmtools_path, raw_path, disk_format=disk_format)
+            # Populate tree AND refresh disk info
+            self.image_tree.after(0, self.refresh_image_tree)
+    
+            # Compute disk size from diskdefs
+            disk_size = 0
+            if self.diskdefs_manager:
+                disk_info = self.diskdefs_manager.get_disk_info(disk_format)
+                if disk_info:
+                    disk_size = disk_info.get("disksize", 0)
+    
+            # Sum file sizes to calculate remaining space
+            used_size = sum(size for _, size in files)
+            free_size = max(disk_size - used_size, 0) if disk_size else 0
+    
+            # Update GUI
+            self.disk_info_var.set(
+                f"Disk Size: {disk_size:,} bytes   Free Space: {free_size:,} bytes"
+                if disk_size else "Disk Size: N/A   Free Space: N/A"
+            )
             self.status_var.set(f"Loaded disk image: {image_path}")
-            disk_size, free_size = logic.get_disk_info(self.cpmtools_path, raw_path, disk_format="kpii")
-            self.disk_info_var.set(f"Disk Size: {disk_size:,} bytes   Free Space: {free_size:,} bytes")            
+    
         except Exception as e:
             self.status_var.set(str(e))
 
@@ -283,6 +385,14 @@ class ViewCPMApp(tk.Tk):
             self.image_tree.delete(item)
         for f, size in files:
             self.image_tree.insert("", "end", values=(f, size))
+            
+    def update_title(self, filename=None):
+        base_title = "ViewCPM - CP/M Disk Image Manager"
+        if filename:
+            # ShaZam! — show the filename in brackets in the title
+            self.title(f"{base_title} - [{os.path.basename(filename)}]")
+        else:
+            self.title(base_title)
 
     # ----------------------------
     # Insert / Extract / Delete
@@ -318,8 +428,30 @@ class ViewCPMApp(tk.Tk):
 
     def refresh_image_tree(self):
         if getattr(self, "_current_raw_path", None):
-            files = logic.list_image_files(self.cpmtools_path, self._current_raw_path, disk_format="kpii")
+            # Determine selected disk format
+            disk_format = getattr(self, "_current_disk_format", "kpii")
+            if self.disk_format_var.get() and self.diskdefs_manager:
+                disk_format = self.disk_format_var.get()
+                self._current_disk_format = disk_format
+    
+            # List files
+            files = logic.list_image_files(self.cpmtools_path, self._current_raw_path, disk_format=disk_format)
             self.image_tree.after(0, self.populate_image_tree, files)
+            
+            disk_size = 0
+            if self.diskdefs_manager:
+                disk_info = self.diskdefs_manager.get_disk_info(disk_format)
+                if disk_info:
+                    disk_size = disk_info.get("disksize", 0)
+            
+            # Sum file sizes safely (remove commas)
+            used_size = sum(int(str(size).replace(',', '')) for _, size in files)
+            free_size = max(disk_size - used_size, 0) if disk_size else 0
+            
+            self.disk_info_var.set(
+                f"Disk Size: {disk_size:,} bytes   Free Space: {free_size:,} bytes"
+                if disk_size else "Disk Size: N/A   Free Space: N/A"
+            )
 
 # ----------------------------
 # Run App
