@@ -90,7 +90,26 @@ class ViewCPMApp(tk.Tk):
         if diskdefs_path and os.path.exists(diskdefs_path):
             self.diskdefs_manager = DiskDefsManager(diskdefs_path)
         else:
-            self.diskdefs_manager = None    
+            self.diskdefs_manager = None
+            
+    def open_disk_image_from_path(self, image_path):
+        if not os.path.exists(image_path):
+            return
+        self._current_image_path = image_path
+        self.update_title(image_path)  # show filename in title
+        prefs.set_pref("last_disk_image", image_path)  # ShaZam! — remember exact file                
+        threading.Thread(target=self.convert_and_list_image, args=(image_path,), daemon=True).start()
+    
+            
+    def open_folder_from_path(self, folder):
+        for item in self.folder_tree.get_children():
+            self.folder_tree.delete(item)
+        files = utils.list_host_files(folder)
+        for f, size in files:
+            self.folder_tree.insert("", "end", values=(f, f"{size:,}"))
+        self.host_folder_var.set(f"Folder: {folder}")
+        self.status_var.set(f"Loaded folder: {folder}")
+    
         
     def finish_setup(self):
         # Center window
@@ -106,7 +125,18 @@ class ViewCPMApp(tk.Tk):
         # Deiconify and bring to front
         self.deiconify()
         self.lift()
-        self.focus_force()        
+        self.focus_force()
+
+        # Load last host folder if available
+        last_host = prefs.get_pref("last_host_folder", None)
+        if last_host and os.path.exists(last_host):
+            self.open_folder_from_path(last_host)
+                        
+        # ShaZam! — load last disk image if available
+        last_image = prefs.get_pref("last_disk_image", None)
+        if last_image and os.path.exists(last_image):
+            self.open_disk_image_from_path(last_image)      
+        
 
     # ----------------------------
     # Toolbar
@@ -344,6 +374,7 @@ class ViewCPMApp(tk.Tk):
             prefs.set_pref("last_image_folder", os.path.dirname(image_path))
             self._current_image_path = image_path
             self.update_title(image_path)  # ShaZam! — update title bar with filename
+            prefs.set_pref("last_disk_image", image_path)  # ShaZam! — remember exact file        
             threading.Thread(target=self.convert_and_list_image, args=(image_path,), daemon=True).start()
 
     def convert_and_list_image(self, image_path):
