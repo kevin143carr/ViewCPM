@@ -328,7 +328,8 @@ class ViewCPMApp(tk.Tk):
                 self.folder_tree.delete(item)
             files = utils.list_host_files(folder)
             for f, size in files:
-                self.folder_tree.insert("", "end", values=(f, size))
+                # ShaZam! — format size with commas
+                self.folder_tree.insert("", "end", values=(f, f"{size:,}"))
             self.status_var.set(f"Loaded folder: {folder}")
             self.host_folder_var.set(f"Folder: {folder}")        
 
