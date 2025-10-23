@@ -10,21 +10,21 @@ class DiskImageManager:
         status_callback: function(str) to update status bar
         """
         self.cpmtools_path = cpmtools_path
-        self._current_raw_path = None
+        self._current_image_path = None
         self.status_callback = status_callback or (lambda msg: None)
 
-    def set_current_raw(self, raw_path):
-        self._current_raw_path = raw_path
+    def set_current_raw(self, image_path):
+        self._current_image_path = image_path
 
     # --- Insert ---
     def insert_files(self, host_folder, files, callback=None):
-        if not self._current_raw_path:
+        if not self._current_image_path:
             raise RuntimeError("No disk image loaded.")
         def task():
             try:
                 for f in files:
                     host_file = os.path.join(host_folder, f)
-                    logic.insert_file(self.cpmtools_path, self._current_raw_path, host_file)
+                    logic.insert_file(self.cpmtools_path, self._current_image_path, host_file)
                 self.status_callback("Insert complete.")
             except Exception as e:
                 self.status_callback(f"Insert failed: {e}")
@@ -34,12 +34,12 @@ class DiskImageManager:
 
     # --- Extract ---
     def extract_files(self, files, dest_folder, callback=None):
-        if not self._current_raw_path:
+        if not self._current_image_path:
             raise RuntimeError("No disk image loaded.")
         def task():
             try:
                 for f in files:
-                    logic.extract_file(self.cpmtools_path, self._current_raw_path, f, dest_folder)
+                    logic.extract_file(self.cpmtools_path, self._current_image_path, f, dest_folder)
                 self.status_callback("Extract complete.")
             except Exception as e:
                 self.status_callback(f"Extract failed: {e}")
@@ -49,12 +49,12 @@ class DiskImageManager:
 
     # --- Delete ---
     def delete_files(self, files, callback=None):
-        if not self._current_raw_path:
+        if not self._current_image_path:
             raise RuntimeError("No disk image loaded.")
         def task():
             try:
                 for f in files:
-                    logic.delete_file(self.cpmtools_path, self._current_raw_path, f)
+                    logic.delete_file(self.cpmtools_path, self._current_image_path, f)
                 self.status_callback("Delete complete.")
             except Exception as e:
                 self.status_callback(f"Delete failed: {e}")

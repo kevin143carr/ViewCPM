@@ -26,11 +26,8 @@ def is_directory(path):
     return os.path.isdir(path)
 
 def check_paths(samdisk_path, cpmtools_path):
-    """Check SAMdisk and cpmtools paths. Returns (ok: bool, messages: list)."""
+    """Check cpmtools paths. Returns (ok: bool, messages: list)."""
     messages = []
-
-    if not samdisk_path or not is_executable_file(samdisk_path):
-        messages.append("SAMdisk path is missing or not executable.")
 
     if not cpmtools_path or not is_directory(cpmtools_path):
         messages.append("cpmtools path is missing or not a directory.")
@@ -46,6 +43,6 @@ def check_paths(samdisk_path, cpmtools_path):
 def show_path_check_result(ok, messages):
     """Display results in a messagebox."""
     if ok:
-        messagebox.showinfo("Success", "SAMdisk and cpmtools paths are valid!")
+        messagebox.showinfo("Success", "cpmtools paths are valid!")
     else:
         messagebox.showerror("Path Check Failed", "\n".join(messages))

@@ -57,7 +57,9 @@ class ViewCPMApp(tk.Tk):
         self.withdraw()
     
         # Preferences
-        self.samdisk_path = prefs.get_pref("samdisk_path", "")
+        self.teledisk_command = prefs.get_pref("tele.convparams", "")
+        self.imagedisk_command = prefs.get_pref("imd.convparams", "")
+        self.dsk_command = prefs.get_pref("dsk.convparams", "")
         self.cpmtools_path = prefs.get_pref("cpmtools_path", "")
         self.diskdefs_path = prefs.get_pref("diskdefs_path", "")
         
@@ -178,7 +180,9 @@ class ViewCPMApp(tk.Tk):
         self.disk_format_combo.bind("<<ComboboxSelected>>", self.on_disk_format_selected)
         # ----------------------------
     
-        settings_btn = ttk.Button(toolbar, text="Preferences", command=self.open_prefs_dialog)
+        settings_btn = ttk.Button(toolbar, text="Preferences",
+                                  command=lambda: prefs.open_prefs_dialog(self))
+        
         settings_btn.pack(side=tk.RIGHT, padx=2)
         create_tooltip(settings_btn, "Preferences for paths and other things")
     
@@ -264,87 +268,7 @@ class ViewCPMApp(tk.Tk):
             messagebox.showinfo(
                 "Disk Format Selected",
                 f"Selected: {selected}\nCalculated Size: {size_kb:.1f} KB"
-            )
-
-    # ----------------------------
-    # Preferences
-    # ----------------------------
-    def open_prefs_dialog(self):
-        dialog = tk.Toplevel(self)
-        dialog.title("Preferences")         
-    
-        # SAMdisk
-        tk.Label(dialog, text="SAMdisk Path:").pack(padx=10, pady=(10,0))
-        entry_samdisk = tk.Entry(dialog, width=60)
-        entry_samdisk.pack(padx=10, pady=2)
-        entry_samdisk.insert(0, self.samdisk_path)
-    
-        def browse_samdisk():
-            path = filedialog.askopenfilename(title="Select SAMdisk executable")
-            if path:
-                entry_samdisk.delete(0, tk.END)
-                entry_samdisk.insert(0, path)
-                self.samdisk_path = path
-                prefs.set_pref("samdisk_path", path)
-    
-        tk.Button(dialog, text="Browse...", command=browse_samdisk).pack(padx=10, pady=2)
-    
-        # cpmtools
-        tk.Label(dialog, text="cpmtools Path:").pack(padx=10, pady=(10,0))
-        entry_cpmtools = tk.Entry(dialog, width=60)
-        entry_cpmtools.pack(padx=10, pady=2)
-        entry_cpmtools.insert(0, self.cpmtools_path)
-    
-        def browse_cpmtools():
-            path = filedialog.askdirectory(title="Select cpmtools directory")
-            if path:
-                entry_cpmtools.delete(0, tk.END)
-                entry_cpmtools.insert(0, path)
-                self.cpmtools_path = path
-                prefs.set_pref("cpmtools_path", path)
-                self.disk_manager.cpmtools_path = path
-    
-        tk.Button(dialog, text="Browse...", command=browse_cpmtools).pack(padx=10, pady=2)
-    
-        # Diskdefs
-        tk.Label(dialog, text="Diskdefs File:").pack(padx=10, pady=(10,0))
-        entry_diskdefs = tk.Entry(dialog, width=60)
-        entry_diskdefs.pack(padx=10, pady=2)
-        entry_diskdefs.insert(0, prefs.get_pref("diskdefs_path", ""))
-    
-        def browse_diskdefs():
-            path = filedialog.askopenfilename(
-                title="Select diskdefs file",
-                filetypes=[("All files", "*.*")]
-            )
-            if path:
-                entry_diskdefs.delete(0, tk.END)
-                entry_diskdefs.insert(0, path)
-                prefs.set_pref("diskdefs_path", path)
-                # Refresh dropdown if diskdefs changed
-                self.diskdefs_path = path
-                if os.path.exists(path):
-                    self.diskdefs_manager = DiskDefsManager(path)
-                    self.disk_format_combo["values"] = self.diskdefs_manager.get_disk_names()                
-    
-        tk.Button(dialog, text="Browse...", command=browse_diskdefs).pack(padx=10, pady=2)
-    
-        # Final actions
-        tk.Button(dialog, text="Check Paths", command=self.check_paths_button).pack(padx=10, pady=10)
-    
-        # Center the dialog on parent
-        dialog.update_idletasks()
-        w = dialog.winfo_width()
-        h = dialog.winfo_height()
-        x = self.winfo_rootx() + (self.winfo_width() // 2) - (w // 2)
-        y = self.winfo_rooty() + (self.winfo_height() // 2) - (h // 2)
-        dialog.geometry(f"{w}x{h}+{x}+{y}")
-        dialog.deiconify()
-             
-
-    def check_paths_button(self):
-        ok, messages = utils.check_paths(self.samdisk_path, self.cpmtools_path)
-        utils.show_path_check_result(ok, messages)
+            )           
 
     # ----------------------------
     # Host Folder
@@ -368,7 +292,7 @@ class ViewCPMApp(tk.Tk):
     # ----------------------------
     def open_disk_image(self):
         last_folder = prefs.get_pref("last_image_folder", os.path.expanduser("~"))
-        filetypes = [("Disk Images", "*.dsk *.img *.imd"), ("All files", "*.*")]
+        filetypes = [("Disk Images", "*.dsk *.td0 *.imd"), ("All files", "*.*")]
         image_path = filedialog.askopenfilename(title="Select Disk Image", filetypes=filetypes, initialdir=last_folder)
         if image_path:
             prefs.set_pref("last_image_folder", os.path.dirname(image_path))
@@ -378,10 +302,10 @@ class ViewCPMApp(tk.Tk):
             threading.Thread(target=self.convert_and_list_image, args=(image_path,), daemon=True).start()
 
     def convert_and_list_image(self, image_path):
-        self.status_var.set(f"Converting {image_path} → tmp RAW")
+        self.status_var.set(f"Converting {image_path} → tmp IMD")
         try:
-            # Convert to RAW via SAMdisk
-            raw_path = logic.convert_dsk_to_raw(self.samdisk_path, image_path)
+            # Convert to IMD
+            raw_path = logic.convert_dsk_to_imd(self.teledisk_command, self.cpmtools_path, image_path)
             self._current_raw_path = raw_path
             # ShaZam! — update title to show the loaded image
             self.update_title(image_path)            
