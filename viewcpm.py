@@ -386,7 +386,7 @@ class ViewCPMApp(tk.Tk):
             messagebox.showwarning("Delete", "No files selected in disk image.")
             return
         files = [self.image_tree.item(i)['values'][0] for i in selection]
-        if messagebox.askyesno("Delete", f"Delete {len(files)} file(s) from image?"):
+        if messagebox.askyesno("Delete", f"Delete {len(files)} file(s) from image?", parent=self):
             self.disk_manager.delete_files(files, callback=self.refresh_image_tree)
 
     def refresh_image_tree(self):

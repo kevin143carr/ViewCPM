@@ -40,9 +40,9 @@ def check_paths(samdisk_path, cpmtools_path):
 
     return len(messages) == 0, messages
 
-def show_path_check_result(ok, messages):
+def show_path_check_result(iparent, ok, messages):
     """Display results in a messagebox."""
     if ok:
-        messagebox.showinfo("Success", "cpmtools paths are valid!")
+        messagebox.showinfo("Success", "cpmtools paths are valid!", parent=iparent)
     else:
-        messagebox.showerror("Path Check Failed", "\n".join(messages))
+        messagebox.showerror("Path Check Failed", "\n".join(messages), parent=iparent)

@@ -4,7 +4,7 @@
   "last_image_folder": "/Users/kevincarr/projects/python/ViewCPM/input/TD0",
   "diskdefs_path": "support/libdskcpmtools/diskdefs",
   "disk_format": "kpii",
-  "last_disk_image": "/Users/kevincarr/projects/python/ViewCPM/input/TD0/kii-mbas.td0",
+  "last_disk_image": "/Users/kevincarr/projects/python/ViewCPM/input/TD0/kii-blnk.td0",
   "tele.convparams": "dskconv -itype tele -otype imd {infile} {outfile}",
   "imd.convparams": "dskconv -itype imd -otype dsk {infile} {outfile}",
   "dsk.convparams": "dskconv -itype dsk -otype imd {infile} {outfile}",

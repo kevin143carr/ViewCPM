@@ -31,7 +31,7 @@ def set_pref(key, value):
     
 def check_paths_button(parent):
     ok, messages = utils.check_paths(parent.teledisk_command, parent.cpmtools_path)
-    utils.show_path_check_result(ok, messages)
+    utils.show_path_check_result(parent, ok, messages)
       
     # ----------------------------
     # Preferences
@@ -106,6 +106,11 @@ def open_prefs_dialog(parent):
         prefs.set_pref("dsk_command", entry_dskdisk.get())
         prefs.set_pref("cpmtools_path", entry_cpmtools.get())
         prefs.set_pref("diskdefs_path", entry_diskdefs.get())
+        parent.teledisk_command = prefs.get_pref("tele.convparams", "")
+        parent.imagedisk_command = prefs.get_pref("imd.convparams", "")
+        parent.dsk_command = prefs.get_pref("dsk.convparams", "")
+        parent.cpmtools_path = prefs.get_pref("cpmtools_path", "")
+        parent.diskdefs_path = prefs.get_pref("diskdefs_path", "")        
         dialog.destroy()
 
     button_frame = tk.Frame(dialog)
