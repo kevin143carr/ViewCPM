@@ -44,7 +44,7 @@ def open_prefs_dialog(parent):
     dialog.grab_set()  # make modal
 
     # Load current prefs
-    teledisk_cmd = prefs.get_pref("teledisk_command", "")
+    teledisk_cmd = prefs.get_pref("tele.convparams", "")
     imagedisk_cmd = prefs.get_pref("imagedisk_command", "")
     dsk_cmd = prefs.get_pref("dsk_command", "")
     cpmtools_path = prefs.get_pref("cpmtools_path", "")
@@ -101,7 +101,7 @@ def open_prefs_dialog(parent):
 
     # --- Save & Close / Check Paths ---
     def save_all_prefs():
-        prefs.set_pref("teledisk_command", entry_teledisk.get())
+        prefs.set_pref("tele.convparams", entry_teledisk.get())
         prefs.set_pref("imagedisk_command", entry_imagedisk.get())
         prefs.set_pref("dsk_command", entry_dskdisk.get())
         prefs.set_pref("cpmtools_path", entry_cpmtools.get())

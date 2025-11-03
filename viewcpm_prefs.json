@@ -4,11 +4,10 @@
   "last_image_folder": "/Users/kevincarr/projects/python/ViewCPM/input/TD0",
   "diskdefs_path": "support/libdskcpmtools/diskdefs",
   "disk_format": "kpii",
-  "last_disk_image": "/Users/kevincarr/projects/python/ViewCPM/input/TD0/kii-blnk.td0",
+  "last_disk_image": "/Users/kevincarr/projects/python/ViewCPM/input/TD0/kpii-149.td0",
   "tele.convparams": "dskconv -itype tele -otype imd {infile} {outfile}",
-  "imd.convparams": "dskconv -itype imd -otype dsk {infile} {outfile}",
+  "imd.convparams": "dskconv -itype imd -otype edsk {infile} {outfile}",
   "dsk.convparams": "dskconv -itype dsk -otype imd {infile} {outfile}",
-  "teledisk_command": "dskconv -itype tele -otype imd {infile} {outfile}",
   "imagedisk_command": "dskconv -itype imd -otype dsk {infile} {outfile}",
   "dsk_command": "dskconv -itype dsk -otype imd {infile} {outfile}"
 }

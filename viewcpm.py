@@ -179,6 +179,11 @@ class ViewCPMApp(tk.Tk):
     
         self.disk_format_combo.bind("<<ComboboxSelected>>", self.on_disk_format_selected)
         # ----------------------------
+        
+        # --- Export Button ---
+        export_btn = ttk.Button(toolbar, text="Export", command=self.export_to_dsk)
+        export_btn.pack(side=tk.LEFT, padx=2)
+        create_tooltip(export_btn, "Export to DSK File")        
     
         settings_btn = ttk.Button(toolbar, text="Preferences",
                                   command=lambda: prefs.open_prefs_dialog(self))
@@ -249,6 +254,39 @@ class ViewCPMApp(tk.Tk):
         # Drag-and-drop can be implemented later
         pass
     
+    def export_to_dsk(self):
+        try:
+            # Ensure a disk image is loaded
+            if not self.disk_manager.get_current_raw_path():
+                messagebox.showerror("Error", "No IMD image loaded.")
+                return
+            
+            current_imd_path = self.disk_manager.get_current_raw_path();
+    
+            # Pull settings from preferences
+            cmd_template = self.prefs.get_pref("imd.convparams", "")
+            tools_path = self.prefs.get_pref("cpmtools_path", "")
+    
+            # Ask user where to save the DSK file
+            default_name = os.path.splitext(os.path.basename(current_imd_path))[0]
+            out_path = filedialog.asksaveasfilename(parent=self, 
+                defaultextension=".dsk",
+                filetypes=[("DSK Files", "*.dsk")],
+                initialfile=default_name,
+                title="Save DSK File"
+            )
+    
+            if not out_path:
+                return  # user canceled
+    
+            # Convert IMD → DSK
+            final_path = logic.convert_disk_image(cmd_template, tools_path, current_imd_path, out_path)
+    
+            messagebox.showinfo("Export Complete", f"Exported to:\n{final_path}")
+    
+        except Exception as e:
+            messagebox.showerror("Export Error", str(e))
+    
     # ----------------------------
     # Disk Format Selection
     # ----------------------------
@@ -309,7 +347,7 @@ class ViewCPMApp(tk.Tk):
             self._current_raw_path = raw_path
             # ShaZam! — update title to show the loaded image
             self.update_title(image_path)            
-            self.disk_manager.set_current_raw(raw_path)
+            self.disk_manager.set_current_raw_path(raw_path)
     
             # Determine selected disk format
             disk_format = "kpii"  # default

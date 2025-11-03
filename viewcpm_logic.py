@@ -64,6 +64,49 @@ def cleanup_tmp(tmp_dir):
 # Conversion
 # ----------------------------
 
+# ----------------------------
+# Export IMD to DSK
+# ----------------------------
+
+def convert_disk_image(cmd_template, tools_path, imd_path, out_path):
+    """
+    Convert an .IMD file to .DSK using the dskconv-style command defined in prefs.json.
+    cmd_template: template like `"dskconv -otype dsk {infile} {outfile}"`
+    tools_path: folder where dskconv resides
+    imd_path: input IMD file
+    out_path: final DSK output path chosen by user
+    """
+
+    if not cmd_template or not tools_path:
+        raise ValueError("Missing 'dskconv_command' or 'cpmtools_path' in prefs")
+
+    # Extract the executable name from the command template
+    cmd_words = shlex.split(cmd_template)
+    exe_name = cmd_words[0]
+    converter_path = os.path.join(tools_path, exe_name)
+
+    if not os.path.isfile(converter_path):
+        raise FileNotFoundError(f"Converter executable not found: {converter_path}")
+
+    # Fill template placeholders
+    cmd_filled = cmd_template.format(infile=imd_path, outfile=out_path)
+
+    # Replace exe name with full path
+    cmd_parts = shlex.split(cmd_filled)
+    cmd_parts[0] = converter_path
+
+    # Quote parts safely for execution
+    cmd = " ".join(f'"{part}"' for part in cmd_parts)
+
+    # Run the command
+    success, output = run_command(cmd)
+
+    if not success:
+        raise RuntimeError(f"DSK export failed:\n{output}")
+
+    return out_path
+
+
 def convert_dsk_to_imd(cmd_template, tools_path, image_path):
     """
     Convert a .DSK/.TD0 file to IMD using the converter defined in prefs.json.

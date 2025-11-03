@@ -13,9 +13,12 @@ class DiskImageManager:
         self._current_image_path = None
         self.status_callback = status_callback or (lambda msg: None)
 
-    def set_current_raw(self, image_path):
+    def set_current_raw_path(self, image_path):
         self._current_image_path = image_path
 
+    def get_current_raw_path(self):
+        return self._current_image_path
+        
     # --- Insert ---
     def insert_files(self, host_folder, files, callback=None):
         if not self._current_image_path:
