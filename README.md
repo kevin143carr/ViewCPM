@@ -1,6 +1,6 @@
 # ViewCPM
 
-**ViewCPM** is a graphical disk image manager for CP/M systems. It allows users to open, browse, modify, and export CP/M-compatible disk images. The tool supports several disk formats and integrates with `cpmtools` and `dskconv` to enable format conversion and editing operations.
+**ViewCPM** is a graphical disk image manager for CP/M systems. It allows users to open, browse, modify, and export CP/M-compatible disk images. The tool supports several disk formats and integrates with `cpmtools` and `dskconv` to enable format conversion and editing operations.  Currently I am using this to work with my Kaypro II and Flash Floppy.  I also have other CP/M machines, TRS-80 Model 4P and a obscure 8"(er) called an EXO, which almost nobody knows about.  I will keep this updated about what is working and what is not.  Also check out FFMaker, which strictly converts image files, it can be found at https://github.com/kevin143carr/FF-Maker
 
 ---
 
