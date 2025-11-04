@@ -8,26 +8,28 @@ import shlex
 # ----------------------------
 # Utilities
 # ----------------------------
-def run_command(cmd, use_diskdefs=False, prefs=None):
+def run_command(cmd, use_diskdefs=False, directorystr=None):
     """
     Run shell command and return (success, output).
 
     Parameters:
         cmd (str): Command to run.
         cwd (str|None): Optional working directory.
-        use_diskdefs (bool): If True, set CPMTOOLS to prefs['diskdefs_path'].
-        prefs (dict|None): Preferences dict containing diskdefs_path.
+        use_diskdefs (bool): If True, set CPMTOOLS to directorystr.
     """
     try:
         env = os.environ.copy()
-        if use_diskdefs and prefs:
-            env['CPMTOOLS'] = prefs
+        if use_diskdefs and directorystr:
+            env['CPMTOOLS'] = directorystr
             
         if use_diskdefs:
-            cwd = os.path.dirname(prefs)  # get directory
+            cwd = os.path.dirname(directorystr)  # get directory
+            cwd = os.path.abspath(os.path.expanduser(cwd))
         else:
             cwd = None
 
+        cmd = os.path.abspath(os.path.expanduser(cmd))
+        
         result = subprocess.run(
             cmd,
             shell=True,
