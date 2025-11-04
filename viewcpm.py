@@ -332,7 +332,7 @@ class ViewCPMApp(tk.Tk):
     def open_disk_image(self):
         last_folder = prefs.get_pref("last_image_folder", os.path.expanduser("~"))
         filetypes = [("Disk Images", "*.dsk *.td0 *.imd"), ("All files", "*.*")]
-        image_path = filedialog.askopenfilename(title="Select Disk Image", filetypes=filetypes, initialdir=last_folder)
+        image_path = filedialog.askopenfilename(title="Select Disk Image", filetypes=filetypes, initialdir=last_folder, parent=self)
         if image_path:
             prefs.set_pref("last_image_folder", os.path.dirname(image_path))
             self._current_image_path = image_path
@@ -380,7 +380,7 @@ class ViewCPMApp(tk.Tk):
                     disk_size = disk_info.get("disksize", 0)
     
             # Sum file sizes to calculate remaining space
-            used_size = sum(size for _, size in files)
+            used_size = sum(utils.parse_size(size) for _, size in files)
             free_size = max(disk_size - used_size, 0) if disk_size else 0
     
             # Update GUI

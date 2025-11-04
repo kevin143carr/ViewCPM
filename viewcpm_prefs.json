@@ -1,13 +1,13 @@
 {
-  "cpmtools_path": "/Users/kevincarr/projects/python/ViewCPM/support/libdskcpmtools",
-  "last_host_folder": "/Users/kevincarr/projects/python/ViewCPM/input/KPIIFiles",
-  "last_image_folder": "/Users/kevincarr/projects/python/ViewCPM/input/TD0",
-  "diskdefs_path": "support/libdskcpmtools/diskdefs",
+  "cpmtools_path": "support/osx/libdskcpmtools",
+  "last_host_folder": "/Volumes/AppleShare/VintageComputers/Kaypro/KAYPROII/MODEM7",
+  "last_image_folder": "/Volumes/AppleShare/VintageComputers/Kaypro/kayproii 2",
+  "diskdefs_path": "support/osx/libdskcpmtools/diskdefs",
   "disk_format": "kpii",
-  "last_disk_image": "/Users/kevincarr/projects/python/ViewCPM/input/TD0/kpii-149.td0",
-  "tele.convparams": "dskconv -itype tele -otype imd {infile} {outfile}",
-  "imd.convparams": "dskconv -itype imd -otype edsk {infile} {outfile}",
-  "dsk.convparams": "dskconv -itype dsk -otype imd {infile} {outfile}",
-  "imagedisk_command": "dskconv -itype imd -otype dsk {infile} {outfile}",
-  "dsk_command": "dskconv -itype dsk -otype imd {infile} {outfile}"
+  "last_disk_image": "/Volumes/AppleShare/VintageComputers/Kaypro/kayproii 2/KAYPRO2.IMD",
+  "tele.convparams": "dskdump -itype tele -otype imd {infile} {outfile}",
+  "imd.convparams": "dskdump -itype imd -otype edsk {infile} {outfile}",
+  "dsk.convparams": "dskdump -itype dsk -otype imd {infile} {outfile}",
+  "imagedisk_command": "dskdump -itype imd -otype dsk {infile} {outfile}",
+  "dsk_command": "dskdump -itype dsk -otype imd {infile} {outfile}"
 }

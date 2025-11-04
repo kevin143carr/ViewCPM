@@ -46,3 +46,9 @@ def show_path_check_result(iparent, ok, messages):
         messagebox.showinfo("Success", "cpmtools paths are valid!", parent=iparent)
     else:
         messagebox.showerror("Path Check Failed", "\n".join(messages), parent=iparent)
+        
+def parse_size(value):
+    try:
+        return int(str(value).replace(',', '').strip())
+    except (ValueError, TypeError):
+        return 0
