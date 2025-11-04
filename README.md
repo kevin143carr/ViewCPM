@@ -36,7 +36,7 @@ Example configuration:
 
 ```json
 {
-  "cpmtools_path": "/Users/whomever/projects/python/ViewCPM/support/libdskcpmtools",
+  "cpmtools_path": "support/libdskcpmtools",
   "last_host_folder": "/Users/whomever/projects/python/ViewCPM/input/KPIIFiles",
   "last_image_folder": "/Users/whomever/projects/python/ViewCPM/input/TD0",
   "diskdefs_path": "support/libdskcpmtools/diskdefs",
