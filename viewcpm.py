@@ -3,6 +3,7 @@ import os
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import threading
+import shutil
 import viewcpm_logic as logic
 import viewcpm_prefs as prefs
 import viewcpm_utils as utils
@@ -282,7 +283,7 @@ class ViewCPMApp(tk.Tk):
             # Convert IMD → DSK
             final_path = logic.convert_disk_image(cmd_template, tools_path, current_imd_path, out_path)
     
-            messagebox.showinfo("Export Complete", f"Exported to:\n{final_path}")
+            messagebox.showinfo("Export Complete", f"Exported to:\n{final_path}", parent=self)
     
         except Exception as e:
             messagebox.showerror("Export Error", str(e))
@@ -313,7 +314,7 @@ class ViewCPMApp(tk.Tk):
     # ----------------------------
     def open_folder(self):
         last_folder = prefs.get_pref("last_host_folder", os.path.expanduser("~"))
-        folder = filedialog.askdirectory(title="Select Host Folder", initialdir=last_folder)
+        folder = filedialog.askdirectory(title="Select Host Folder", initialdir=last_folder, parent=self)
         if folder:
             prefs.set_pref("last_host_folder", folder)
             for item in self.folder_tree.get_children():
@@ -343,7 +344,18 @@ class ViewCPMApp(tk.Tk):
         self.status_var.set(f"Converting {image_path} → tmp IMD")
         try:
             # Convert to IMD
-            raw_path = logic.convert_dsk_to_imd(self.teledisk_command, self.cpmtools_path, image_path)
+            name, ext = os.path.splitext(image_path)
+            
+            if ext.lower() == ".imd":
+                tmp_dir = logic.get_tmp_folder()
+                imd_filename = os.path.splitext(os.path.basename(image_path))[0] + ".IMD"
+                raw_path = os.path.join(tmp_dir, imd_filename)
+                shutil.copy(image_path, raw_path)
+            elif ext.lower() == ".dsk":
+                raw_path = logic.convert_dsk_to_imd(self.dsk_command, self.cpmtools_path, image_path)
+            else:
+                raw_path = logic.convert_dsk_to_imd(self.teledisk_command, self.cpmtools_path, image_path)
+                
             self._current_raw_path = raw_path
             # ShaZam! — update title to show the loaded image
             self.update_title(image_path)            
