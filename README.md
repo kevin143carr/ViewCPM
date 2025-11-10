@@ -98,6 +98,8 @@ MIT License © 2025 Kevin Carr
 
 ---
 
+## 🌐 Binaries for OSX,Windows and Linux
+
 ## 🌐 Repository
 
 **GitHub:** [https://github.com/kevin143carr/ViewCPM](https://github.com/kevin143carr/ViewCPM)
