@@ -1,8 +1,8 @@
 {
-  "cpmtools_path": "support/win/libdskcpmtools",
+  "cpmtools_path": "support/osx/libdskcpmtools",
   "last_host_folder": "",
   "last_image_folder": "",
-  "diskdefs_path": "support/win/libdskcpmtools/diskdefs",
+  "diskdefs_path": "support/osx/libdskcpmtools/diskdefs",
   "disk_format": "kpii",
   "last_disk_image": "Y:/VintageComputers/Kaypro/kpro-ii.td0",
   "tele.convparams": "dskdump -itype tele -otype imd {infile} {outfile}",
