@@ -4,18 +4,18 @@
 
 ---
 
-## ðŸ§© Features
+## 🧩 Features
 
 - **Open and View** `.TD0` (TeleDisk) disk images.
-- **Automatic Conversion** from `.TD0` â†’ `.IMD` for editable access.
-- **Edit Disk Contents** â€” Add, delete, or extract files within the disk image.
-- **Export to DSK** â€” Convert and save `.IMD` images as `.DSK` (EDSK) format for use with FlashFloppy, emulators, or other retro tools.
-- **Integrated Tools** â€” Uses `cpmtools` and `dskconv` for cross-format conversions.
-- **JSON Preferences** â€” Configure paths, diskdefs, and conversion parameters in a simple `viewcpm_prefs.json` file.
+- **Automatic Conversion** from `.TD0` → `.IMD` for editable access.
+- **Edit Disk Contents** — Add, delete, or extract files within the disk image.
+- **Export to DSK** — Convert and save `.IMD` images as `.DSK` (EDSK) format for use with FlashFloppy, emulators, or other retro tools.
+- **Integrated Tools** — Uses `cpmtools` and `dskconv` for cross-format conversions.
+- **JSON Preferences** — Configure paths, diskdefs, and conversion parameters in a simple `viewcpm_prefs.json` file.
 
 ---
 
-## âš™ï¸� How It Works
+## ⚙️ How It Works
 
 1. **Open a TD0 File**
    - When a `.TD0` disk image is selected, ViewCPM converts it into an intermediate `.IMD` file in a temporary directory.
@@ -30,7 +30,7 @@
 
 ---
 
-## ðŸ› ï¸� Preferences (`viewcpm_prefs.json`)
+## 🛠️ Preferences (`viewcpm_prefs.json`)
 
 Example configuration:
 
@@ -45,36 +45,37 @@ Example configuration:
   "tele.convparams": "dskconv -itype tele -otype imd {infile} {outfile}",
   "imd.convparams": "dskconv -itype imd -otype edsk {infile} {outfile}",
   "dsk.convparams": "dskconv -itype dsk -otype imd {infile} {outfile}",
-  "imagedisk_command": "dskconv -itype imd -otype dsk {infile} {outfile}"
+  "imagedisk_command": "dskconv -itype imd -otype dsk {infile} {outfile}",
+  "dsk_command": "dskconv -itype dsk -otype imd {infile} {outfile}"
 }
 ```
 
 ---
 
-## ðŸ§® Conversion Commands
+## 🧮 Conversion Commands
 
 | Conversion Type | Command Template |
 |-----------------|------------------|
-| TD0 â†’ IMD | `dskconv -itype tele -otype imd {infile} {outfile}` |
-| IMD â†’ DSK | `dskconv -itype imd -otype edsk {infile} {outfile}` |
-| DSK â†’ IMD | `dskconv -itype dsk -otype imd {infile} {outfile}` |
+| TD0 → IMD | `dskconv -itype tele -otype imd {infile} {outfile}` |
+| IMD → DSK | `dskconv -itype imd -otype edsk {infile} {outfile}` |
+| DSK → IMD | `dskconv -itype dsk -otype imd {infile} {outfile}` |
 
 ---
 
-## ðŸ§± Technical Overview
+## 🧱 Technical Overview
 
 - **Language:** Python 3  
 - **GUI Framework:** Tkinter  
 - **Dependencies:** `cpmtools`, `dskconv`, `libdsk`  
 - **Structure:**
-  - `viewcpm.py` â€” main GUI
-  - `viewcpm_logic.py` â€” conversion logic and file handling
-  - `viewcpm_prefs.py` â€” preferences and configuration handling
-  - `viewcpm_utils.py` â€” helper utilities
+  - `viewcpm.py` — main GUI
+  - `viewcpm_logic.py` — conversion logic and file handling
+  - `viewcpm_prefs.py` — preferences and configuration handling
+  - `viewcpm_utils.py` — helper utilities
 
 ---
 
-## ðŸ“¦ Future Enhancements
+## 📦 Future Enhancements
 
 - Native `.IMD` and `.DSK` editors
 - Drag-and-drop file support
@@ -83,7 +84,7 @@ Example configuration:
 
 ---
 
-## ðŸ§° Requirements
+## 🧰 Requirements
 
 - Python 3.8+  
 - `cpmtools` and `dskconv` available in the specified tools path  
@@ -91,14 +92,12 @@ Example configuration:
 
 ---
 
-## ðŸªª License
+## 🪪 License
 
-MIT License Â© 2025 Kevin Carr
+MIT License © 2025 Kevin Carr
 
 ---
 
-## ðŸŒ� Binaries for OSX,Windows and Linux
-
-## ðŸŒ� Repository
+## 🌐 Repository
 
 **GitHub:** [https://github.com/kevin143carr/ViewCPM](https://github.com/kevin143carr/ViewCPM)
