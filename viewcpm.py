@@ -1,5 +1,6 @@
 # viewcpm.py
 import os
+import time
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import threading
@@ -7,6 +8,7 @@ import shutil
 import viewcpm_logic as logic
 import viewcpm_prefs as prefs
 import viewcpm_utils as utils
+import platform
 from viewcpm_diskops import DiskImageManager
 from viewcpm_diskdefs import DiskDefsManager
 
@@ -53,10 +55,7 @@ class ViewCPMApp(tk.Tk):
         self.title("ViewCPM - CP/M Disk Image Manager")         
         self.geometry("1000x600")
         self.minsize(800, 500)
-    
-        # Temporarily withdraw window until fully configured
-        self.withdraw()
-    
+           
         # Preferences
         self.teledisk_command = prefs.get_pref("tele.convparams", "")
         self.imagedisk_command = prefs.get_pref("imd.convparams", "")
@@ -73,7 +72,7 @@ class ViewCPMApp(tk.Tk):
             self.diskdefs_manager = DiskDefsManager(self.diskdefs_path)        
     
         # Disk manager
-        self.disk_manager = DiskImageManager(self.cpmtools_path, status_callback=self.status_callback)
+        self.disk_manager = DiskImageManager(self.cpmtools_path,  self.prefs, status_callback=self.status_callback)
     
         # UI
         self.create_toolbar()
@@ -81,8 +80,12 @@ class ViewCPMApp(tk.Tk):
         self.create_statusbar()
         self.bind_events()
     
-        # Schedule final window setup after idle
-        self.after_idle(self.finish_setup)
+        # Schedule final window setup after idle      
+        if platform.system() == "Windows":
+            self.after(50, self.finish_setup)  # 50ms delay
+        else:
+            self.after_idle(self.finish_setup)
+        
         
     # -------------------------------------------------------------------------
     # Diskdefs loader
@@ -101,18 +104,7 @@ class ViewCPMApp(tk.Tk):
         self._current_image_path = image_path
         self.update_title(image_path)  # show filename in title
         prefs.set_pref("last_disk_image", image_path)  # ShaZam! — remember exact file                
-        threading.Thread(target=self.convert_and_list_image, args=(image_path,), daemon=True).start()
-    
-            
-    def open_folder_from_path(self, folder):
-        for item in self.folder_tree.get_children():
-            self.folder_tree.delete(item)
-        files = utils.list_host_files(folder)
-        for f, size in files:
-            self.folder_tree.insert("", "end", values=(f, f"{size:,}"))
-        self.host_folder_var.set(f"Folder: {folder}")
-        self.status_var.set(f"Loaded folder: {folder}")
-    
+        threading.Thread(target=self.convert_and_list_image, args=(image_path,), daemon=True).start()                            
         
     def finish_setup(self):
         # Center window
@@ -133,7 +125,7 @@ class ViewCPMApp(tk.Tk):
         # Load last host folder if available
         last_host = prefs.get_pref("last_host_folder", None)
         if last_host and os.path.exists(last_host):
-            self.open_folder_from_path(last_host)
+            self.open_folder(last_host)
                         
         # ShaZam! — load last disk image if available
         last_image = prefs.get_pref("last_disk_image", None)
@@ -230,7 +222,7 @@ class ViewCPMApp(tk.Tk):
         tree.heading("name", text="Filename")
         tree.heading("size", text="Size")
         tree.column("name", width=300, anchor="w")
-        tree.column("size", width=100, anchor="e")
+        tree.column("size", width=50, anchor="e")
 
         yscroll = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=tree.yview)
         tree.configure(yscrollcommand=yscroll.set)
@@ -281,7 +273,7 @@ class ViewCPMApp(tk.Tk):
                 return  # user canceled
     
             # Convert IMD → DSK
-            final_path = logic.convert_disk_image(cmd_template, tools_path, current_imd_path, out_path)
+            final_path = logic.convert_imd_to_dsk(cmd_template, tools_path, current_imd_path, out_path)
     
             messagebox.showinfo("Export Complete", f"Exported to:\n{final_path}", parent=self)
     
@@ -312,9 +304,11 @@ class ViewCPMApp(tk.Tk):
     # ----------------------------
     # Host Folder
     # ----------------------------
-    def open_folder(self):
+    def open_folder(self, folder=None):
         last_folder = prefs.get_pref("last_host_folder", os.path.expanduser("~"))
-        folder = filedialog.askdirectory(title="Select Host Folder", initialdir=last_folder, parent=self)
+        if folder == None:            
+            folder = filedialog.askdirectory(title="Select Host Folder", initialdir=last_folder, parent=self)
+        
         if folder:
             prefs.set_pref("last_host_folder", folder)
             for item in self.folder_tree.get_children():
@@ -429,6 +423,12 @@ class ViewCPMApp(tk.Tk):
         if not dest_folder:
             return
         self.disk_manager.extract_files(files, dest_folder, callback=None)
+        last_folder = prefs.get_pref("last_host_folder", os.path.expanduser("~"))
+        
+        if (dest_folder == last_folder):
+            time.sleep(0.5)
+            self.open_folder(last_folder)
+        
 
     def delete_file(self):
         selection = self.image_tree.selection()

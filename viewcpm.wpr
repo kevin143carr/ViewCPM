@@ -46,7 +46,7 @@ proj.file-type = 'shared'
 proj.launch-config = {loc('td0conv.py'): ('custom',
         ('',
          'launch-HWXzYY0Po5wyDdd3')),
-                      loc('viewcpm.py'): ('project',
+                      loc('viewcpm.py'): ('custom',
         ('',
          'launch-u5Qar3vxFyQ2lECI'))}
 proj.main-file = loc('viewcpm.py')

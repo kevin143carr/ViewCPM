@@ -1,4 +1,5 @@
 import os
+import platform
 from tkinter import messagebox
 
 def list_host_files(folder_path):
@@ -32,11 +33,14 @@ def check_paths(samdisk_path, cpmtools_path):
     if not cpmtools_path or not is_directory(cpmtools_path):
         messages.append("cpmtools path is missing or not a directory.")
     else:
-        # check required binaries
+        # On Windows, executables end with .exe
+        is_windows = platform.system().lower().startswith("win")
+        suffix = ".exe" if is_windows else ""
+
         for exe in ["cpmls", "cpmcp"]:
-            exe_path = os.path.join(cpmtools_path, exe)
+            exe_path = os.path.join(cpmtools_path, exe + suffix)
             if not is_executable_file(exe_path):
-                messages.append(f"{exe} not found or not executable in cpmtools directory.")
+                messages.append(f"{exe + suffix} not found or not executable in cpmtools directory.")
 
     return len(messages) == 0, messages
 

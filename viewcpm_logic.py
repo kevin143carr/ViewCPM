@@ -1,7 +1,7 @@
 # viewcpm_logic.py
 import os
+import platform
 import subprocess
-import shutil
 import viewcpm_prefs as prefs
 import shlex
 
@@ -70,7 +70,7 @@ def cleanup_tmp(tmp_dir):
 # Export IMD to DSK
 # ----------------------------
 
-def convert_disk_image(cmd_template, tools_path, imd_path, out_path):
+def convert_imd_to_dsk(cmd_template, tools_path, imd_path, out_path):
     """
     Convert an .IMD file to .DSK using the dskconv-style command defined in prefs.json.
     cmd_template: template like `"dskconv -otype dsk {infile} {outfile}"`
@@ -81,11 +81,14 @@ def convert_disk_image(cmd_template, tools_path, imd_path, out_path):
 
     if not cmd_template or not tools_path:
         raise ValueError("Missing 'dskconv_command' or 'cpmtools_path' in prefs")
+    
+    is_windows = platform.system().lower().startswith("win")
+    suffix = ".exe" if is_windows else ""    
 
-    # Extract the executable name from the command template
-    cmd_words = shlex.split(cmd_template)
+    # Extract converter name and build its full path
+    cmd_words = shlex.split(cmd_template, posix=not is_windows)
     exe_name = cmd_words[0]
-    converter_path = os.path.join(tools_path, exe_name)
+    converter_path = os.path.join(tools_path, exe_name + suffix)   
 
     if not os.path.isfile(converter_path):
         raise FileNotFoundError(f"Converter executable not found: {converter_path}")
@@ -94,9 +97,9 @@ def convert_disk_image(cmd_template, tools_path, imd_path, out_path):
     cmd_filled = cmd_template.format(infile=imd_path, outfile=out_path)
 
     # Replace exe name with full path
-    cmd_parts = shlex.split(cmd_filled)
+    cmd_parts = shlex.split(cmd_filled, posix=not is_windows)
     cmd_parts[0] = converter_path
-
+    
     # Quote parts safely for execution
     cmd = " ".join(f'"{part}"' for part in cmd_parts)
 
@@ -108,26 +111,27 @@ def convert_disk_image(cmd_template, tools_path, imd_path, out_path):
 
     return out_path
 
-
 def convert_dsk_to_imd(cmd_template, tools_path, image_path):
     """
     Convert a .DSK/.TD0 file to IMD using the converter defined in prefs.json.
-    prefs: dict containing 'teledisk_command' and 'cpmtools_path'
-    Returns path to converted IMD/RAW file in tmp folder.
+    Returns the path to the converted IMD/RAW file in the tmp folder.
     """
 
     if not cmd_template or not tools_path:
         raise ValueError("Missing 'teledisk_command' or 'cpmtools_path' in prefs")
 
-    # Extract the converter executable name from the first word of the command
-    cmd_words = shlex.split(cmd_template)
+    is_windows = platform.system().lower().startswith("win")
+    suffix = ".exe" if is_windows else ""
+
+    # Extract converter name and build its full path
+    cmd_words = shlex.split(cmd_template, posix=not is_windows)
     exe_name = cmd_words[0]
-    converter_path = os.path.join(tools_path, exe_name)
+    converter_path = os.path.join(tools_path, exe_name + suffix)
 
     if not os.path.isfile(converter_path):
         raise FileNotFoundError(f"Converter executable not found: {converter_path}")
 
-    # Prepare output file path in temp folder
+    # Prepare output path in tmp folder
     tmp_dir = get_tmp_folder()
     imd_filename = os.path.splitext(os.path.basename(image_path))[0] + ".IMD"
     imd_path = os.path.join(tmp_dir, imd_filename)
@@ -135,20 +139,22 @@ def convert_dsk_to_imd(cmd_template, tools_path, image_path):
     # Fill in infile/outfile placeholders
     cmd_filled = cmd_template.format(infile=image_path, outfile=imd_path)
 
-    # Replace the bare exe name with the full path
-    cmd_parts = shlex.split(cmd_filled)
-    cmd_parts[0] = converter_path
+    # Split into args correctly for the current OS
+    cmd_parts = shlex.split(cmd_filled, posix=not is_windows)
+    cmd_parts[0] = converter_path  # Replace exe name with full path
 
-    # Rebuild safely quoted command
-    cmd = " ".join(f'"{part}"' for part in cmd_parts)
+    # Use subprocess safely across OSes (no manual quoting)
+    from subprocess import run, PIPE
+    result = run(cmd_parts, stdout=PIPE, stderr=PIPE, text=True)
 
-    # Run the command
-    success, output = run_command(cmd)
+    success = (result.returncode == 0)
+    output = result.stdout + result.stderr
 
     if not success:
         raise RuntimeError(f"Conversion failed:\n{output}")
 
     return imd_path
+
 
 # ----------------------------
 # CP/M Image Operations
@@ -162,11 +168,15 @@ def list_image_files(cpmtools_path, raw_path, disk_format="kpii"):
     if not cpmtools_path or not os.path.isdir(cpmtools_path):
         raise FileNotFoundError("CP/M tools directory not found.")
 
-    cpmls = os.path.join(cpmtools_path, "cpmls")
+    # On Windows, executables end with .exe
+    is_windows = platform.system().lower().startswith("win")
+    suffix = ".exe" if is_windows else ""
+    
+    cpmls = os.path.join(cpmtools_path, "cpmls" + suffix)
     if not os.path.isfile(cpmls):
         raise FileNotFoundError(f"cpmls not found in {cpmtools_path}")
 
-    cmd = f'"{cpmls}" -f {disk_format} -l "{raw_path}"'
+    cmd = f'"{cpmls}" -f {disk_format} -l -u "{raw_path}"'
     success, output = run_command(cmd, True, prefs.get_pref("diskdefs_path"))
     files = []
     if success:
@@ -191,66 +201,50 @@ def insert_file(cpmtools_path, image_path, filename, disk_format="kpii"):
     Insert file from host folder into RAW image using cpmtools.
     Assumes current directory contains the source file.
     """
-    cpmcp = os.path.join(cpmtools_path, "cpmcp")
+    
+    is_windows = platform.system().lower().startswith("win")
+    suffix = ".exe" if is_windows else ""
+    
+    cpmcp = os.path.join(cpmtools_path, "cpmcp" + suffix)
     if not os.path.isfile(cpmcp):
         raise FileNotFoundError(f"cpmcp not found in {cpmtools_path}")
     
     finalpath = os.path.basename(filename) 
     
-    cmd = f'"{cpmcp}" -f {disk_format} "{image_path}" "{filename}" 0:{finalpath}'
-    success, output = run_command(cmd)
+    cmd = f'"{cpmcp}" -f {disk_format} -u "{image_path}" "{filename}" 0:{finalpath}'
+    success, output = run_command(cmd, True, prefs.get_pref("diskdefs_path"))
     if not success:
         raise RuntimeError(f"Insert failed:\n{output}")
 
-def extract_file(cpmtools_path, image_path, filename, dest_folder):
+def extract_file(cpmtools_path, image_path, filename, dest_folder, disk_format):
     """
     Extract file from RAW image to dest_folder.
     """
-    cpmcp = os.path.join(cpmtools_path, "cpmcp")
+    is_windows = platform.system().lower().startswith("win")
+    suffix = ".exe" if is_windows else ""
+    
+    cpmcp = os.path.join(cpmtools_path, "cpmcp" + suffix)
     if not os.path.isfile(cpmcp):
-        raise FileNotFoundError(f"cpmcp not found in {cpmtools_path}")
-    dest_path = os.path.join(dest_folder, filename)
-    cmd = f'"{cpmcp}" "{raw_path}" "{dest_path}"'
-    success, output = run_command(cmd)
+        raise FileNotFoundError(f"cpmcp not found in {cpmtools_path}") 
+    
+    cmd = f'"{cpmcp}" -f {disk_format} -t -p -u "{image_path}" 0:{filename} "{dest_folder}"'
+    success, output = run_command(cmd, True, prefs.get_pref("diskdefs_path"))
     if not success:
-        raise RuntimeError(f"Extract failed:\n{output}")
+        raise RuntimeError(f"Insert failed:\n{output}")
 
 def delete_file(cpmtools_path, image_path, filename, disk_format="kpii"):
     """
     Delete file from RAW image using cpmtools.
     """
-    cpmrm = os.path.join(cpmtools_path, "cpmrm")
+    is_windows = platform.system().lower().startswith("win")
+    suffix = ".exe" if is_windows else ""      
+    
+    cpmrm = os.path.join(cpmtools_path, "cpmrm" + suffix)
     if not os.path.isfile(cpmrm):
         raise FileNotFoundError(f"cpmrm not found in {cpmtools_path}")
     cmd = f'"{cpmrm}" -f {disk_format} "{image_path}" 0:"{filename}"'
-    success, output = run_command(cmd)
+    success, output = run_command(cmd, True, prefs.get_pref("diskdefs_path"))
     if not success:
         raise RuntimeError(f"Delete failed:\n{output}")
-    
-def get_disk_info(cpmtools_path, image_path, disk_format="kpii"):
-    """
-    Returns (disk_size_bytes, free_bytes) of RAW image using cpmls -s or cpmtools.
-    """
-    if not cpmtools_path or not os.path.isdir(cpmtools_path):
-        raise FileNotFoundError("CP/M tools directory not found.")
 
-    cpmls = os.path.join(cpmtools_path, "cpmls")
-    if not os.path.isfile(cpmls):
-        raise FileNotFoundError(f"cpmls not found in {cpmtools_path}")
-
-    # cpmls -f format -s image  returns size info
-    cmd = f'"{cpmls}" -f {disk_format} -l "{image_path}"'
-    success, output = run_command(cmd)
-    if not success:
-        return 0, 0
-
-    # Parse output like "size: 12288 free: 4096"
-    import re
-    disk_size = 0
-    free_size = 0
-    match = re.search(r'size:\s*(\d+)\s+free:\s*(\d+)', output)
-    if match:
-        disk_size = int(match.group(1))
-        free_size = int(match.group(2))
-    return disk_size, free_size
 

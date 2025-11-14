@@ -4,7 +4,7 @@ import threading
 import viewcpm_logic as logic
 
 class DiskImageManager:
-    def __init__(self, cpmtools_path, status_callback=None):
+    def __init__(self, cpmtools_path,  prefs, status_callback=None):
         """
         cpmtools_path: Path to CP/M tools directory
         status_callback: function(str) to update status bar
@@ -12,6 +12,7 @@ class DiskImageManager:
         self.cpmtools_path = cpmtools_path
         self._current_image_path = None
         self.status_callback = status_callback or (lambda msg: None)
+        self.prefs = prefs
 
     def set_current_raw_path(self, image_path):
         self._current_image_path = image_path
@@ -42,7 +43,7 @@ class DiskImageManager:
         def task():
             try:
                 for f in files:
-                    logic.extract_file(self.cpmtools_path, self._current_image_path, f, dest_folder)
+                    logic.extract_file(self.cpmtools_path, self._current_image_path, f, dest_folder, self.prefs.get_pref("disk_format"))
                 self.status_callback("Extract complete.")
             except Exception as e:
                 self.status_callback(f"Extract failed: {e}")

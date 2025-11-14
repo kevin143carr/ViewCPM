@@ -46,7 +46,7 @@ def open_prefs_dialog(parent):
     # Load current prefs
     teledisk_cmd = prefs.get_pref("tele.convparams", "")
     imagedisk_cmd = prefs.get_pref("imagedisk_command", "")
-    dsk_cmd = prefs.get_pref("dsk_command", "")
+    dsk_cmd = prefs.get_pref("dsk.convparams", "")
     cpmtools_path = prefs.get_pref("cpmtools_path", "")
     diskdefs_path = prefs.get_pref("diskdefs_path", "")
 
@@ -103,7 +103,7 @@ def open_prefs_dialog(parent):
     def save_all_prefs():
         prefs.set_pref("tele.convparams", entry_teledisk.get())
         prefs.set_pref("imagedisk_command", entry_imagedisk.get())
-        prefs.set_pref("dsk_command", entry_dskdisk.get())
+        prefs.set_pref("dsk.convparams", entry_dskdisk.get())
         prefs.set_pref("cpmtools_path", entry_cpmtools.get())
         prefs.set_pref("diskdefs_path", entry_diskdefs.get())
         parent.teledisk_command = prefs.get_pref("tele.convparams", "")
