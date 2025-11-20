@@ -1,6 +1,31 @@
 import os
+import sys
 import platform
-from tkinter import messagebox
+import logging
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+def get_resource_path(relative_path):
+    """
+    Returns an absolute path to a resource inside the macOS .app bundle,
+    or inside the working directory when running from source.
+    """
+    # Running inside Nuitka macOS .app
+    if getattr(sys, "frozen", False):
+        # Go from MacOS/ → Contents/Resources/
+        base_path = os.path.join(os.path.dirname(sys.executable), "..", "Resources")
+        base_path = os.path.abspath(base_path)
+    else:
+        # Running from source tree
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    final_path = os.path.join(base_path, relative_path)
+    logger.debug(f"Requested: {relative_path}\n"
+                f"    Base Path:  {base_path}\n"
+                f"    Final Path: {final_path}\n\n")
+
+    return os.path.join(base_path, relative_path)
 
 def list_host_files(folder_path):
     """

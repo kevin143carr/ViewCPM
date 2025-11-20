@@ -7,22 +7,25 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR="$SCRIPT_DIR/staging"
 EXE_NAME="viewcpm"
 ZIP_NAME="viewcpm_osx.zip"
+BASE_NAME="${ZIP_NAME%.zip}"
 
 echo "Creating staging folder..."
+rm -rf dist/$ZIP_NAME
+rm -rf dist/$BASE_NAME
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 echo "***************************** BUILDING EXECUTABLE WITH NUITKA ********************************"
 # macOS users may need:  --clang  (if GCC is not present)
- python3 -m nuitka --onefile --standalone --enable-plugin=tk-inter --output-dir="$BUILD_DIR" \
-    --output-filename=viewcpm.bin viewcpm.py
+# python3 -m nuitka --onefile --standalone --enable-plugin=tk-inter --output-dir="$BUILD_DIR" \
+#    --output-filename=viewcpm.bin viewcpm.py
 
 # TRYING TO MAKE AN MAC.APP BUT NO SUCCESS
-# python3 -m nuitka --standalone --enable-plugin=tk-inter --output-dir="$BUILD_DIR" \
-#    	--macos-create-app-bundle --macos-app-name="ViewCPM" \
-#	--macos-app-icon=viewcpmicon.png \
-#	--include-data-files=viewcpm_prefs.json.osx=viewcpm_prefs.json \
-#	--include-data-dir=support=support viewcpm.py
+python3 -m nuitka --standalone --enable-plugin=tk-inter --output-dir="$BUILD_DIR" \
+    	--macos-create-app-bundle --macos-app-name="ViewCPM" \
+	--macos-app-icon=viewcpmicon.png \
+	--include-data-files=viewcpm_prefs.json.osx=viewcpm_prefs.json \
+	--include-data-dir=support=support viewcpm.py
 
 cd "$BUILD_DIR"
 

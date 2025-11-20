@@ -4,8 +4,9 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import viewcpm_prefs as prefs  # safe self-import for get/set_pref
 import viewcpm_utils as utils
+from viewcpm_utils import get_resource_path
 
-PREF_FILE = "viewcpm_prefs.json"
+PREF_FILE = get_resource_path("viewcpm_prefs.json")
 
 def load_prefs():
     """Load preferences from JSON file."""
