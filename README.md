@@ -92,6 +92,131 @@ Example configuration:
 
 ---
 
+# ViewCPM macOS Build Instructions
+
+This section explains how to build ViewCPM for macOS using the provided `nuitka_build_osx.sh` script. The script supports multiple build types: standard binaries, macOS `.app` bundles, and PyInstaller executables with external support files.
+
+---
+
+## Running the Build Script
+
+```bash
+./nuitka_build_osx.sh
+```
+
+The script will prompt you to select a build type:
+
+```
+Select build type:
+1) Standard binary application (Nuitka standalone onefile)
+2) macOS .app bundle (Nuitka standalone)
+3) mac executable with external support (PyInstaller executable)
+4) Build all
+```
+
+Enter the number corresponding to your desired build.
+
+---
+
+## Build Options
+
+### 1. Standard Binary (Nuitka Standalone Onefile)
+
+- Produces a single `.bin` file using Nuitka.
+- Includes the `support/` folder and `viewcpm_prefs.json` internally in the binary.
+- Outputs are staged in `staging/`, and a zip file `viewcpm_osx_bin.zip` is created in `dist/`.
+- A helper script `runviewcpm.sh` is generated to run the binary from its folder.
+
+```bash
+python3 -m nuitka --onefile --standalone \
+    --enable-plugin=tk-inter --output-dir=staging \
+    --include-data-files=viewcpm_prefs.json.osx=viewcpm_prefs.json \
+    --include-data-dir=support=support \
+    --output-filename=viewcpm.bin viewcpm.py
+```
+
+---
+
+### 2. macOS `.app` Bundle (Nuitka Standalone)
+
+- Creates a macOS `.app` bundle for ViewCPM.
+- Includes the `support/` folder and `viewcpm_prefs.json` inside the `.app/Contents/Resources/`.
+- Outputs are staged in `staging/`, and a zip file `viewcpm_osx_app.zip` is created in `dist/`.
+
+```bash
+python3 -m nuitka --standalone --enable-plugin=tk-inter --output-dir=staging \
+    --macos-create-app-bundle --macos-app-name=ViewCPM \
+    --macos-app-icon=viewcpmicon.png \
+    --include-data-files=viewcpm_prefs.json.osx=viewcpm_prefs.json \
+    --include-data-dir=support=support viewcpm.py
+```
+
+---
+
+### 3. PyInstaller Executable with External Support
+
+- Produces a single PyInstaller executable (`viewcpm`) placed in the `staging/` folder.
+- **External resources** (`support/` folder and `viewcpm_prefs.json`) are kept next to the binary, not bundled internally.
+- This allows users to modify configuration or support files without rebuilding the binary.
+- A zip file `viewcpm_osx_exec.zip` is created in `dist/`.
+
+```bash
+pyinstaller --onefile --name viewcpm --distpath staging viewcpm.py
+cp -R ../support staging/
+cp ../viewcpm_prefs.json.osx staging/viewcpm_prefs.json
+```
+
+---
+
+### 4. Build All
+
+- Option `4` runs all three build types sequentially.
+- Each build is staged in `staging/` temporarily, zipped, and then moved to `dist/`.
+
+---
+
+## Staging and Distribution
+
+- `staging/` folder: temporary folder used during builds.
+- `dist/` folder: contains the final zip files for distribution:
+
+```
+dist/
+ ├─ viewcpm_osx_bin.zip
+ ├─ viewcpm_osx_app.zip
+ └─ viewcpm_osx_exec.zip
+```
+
+- After each build, `staging/` is cleaned and recreated for the next build.
+
+---
+
+## Notes
+
+- **External resources**: Only the PyInstaller executable keeps resources external; Nuitka binaries bundle resources inside the binary or `.app`.
+- **Run script**: For standard binaries, `runviewcpm.sh` is created inside `staging/` to simplify execution.
+
+```
+./runviewcpm.sh
+```
+
+- Make sure all required files (`support/` and `viewcpm_prefs.json`) exist in the expected locations before building.
+
+---
+
+## Cleanup
+
+The script automatically removes intermediate build folders:
+
+```bash
+viewcpm.build
+viewcpm.dist
+viewcpm.onefile-build
+staging/
+```
+
+Final distributions remain in `dist/`.
+
 ## 🪪 License
 
 MIT License © 2025 Kevin Carr

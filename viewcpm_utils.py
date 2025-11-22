@@ -6,26 +6,46 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+import os
+import sys
+import logging
+
+logger = logging.getLogger(__name__)
+
 def get_resource_path(relative_path):
     """
-    Returns an absolute path to a resource inside the macOS .app bundle,
-    or inside the working directory when running from source.
+    Get absolute path to a resource, compatible with:
+    - Nuitka macOS .app bundle
+    - Nuitka onefile binary
+    - PyInstaller onefile (external resources)
+    - Running from source
+    
+    Returns the absolute path to the requested resource.
     """
-    # Running inside Nuitka macOS .app
+    # Default: running from source
+    base_path = os.path.dirname(os.path.abspath(__file__))
+
     if getattr(sys, "frozen", False):
-        # Go from MacOS/ → Contents/Resources/
-        base_path = os.path.join(os.path.dirname(sys.executable), "..", "Resources")
-        base_path = os.path.abspath(base_path)
-    else:
-        # Running from source tree
-        base_path = os.path.dirname(os.path.abspath(__file__))
+        # Running in a frozen binary
+        exe_path = os.path.abspath(sys.executable)
+
+        # Detect Nuitka .app bundle (macOS)
+        if exe_path.endswith("/MacOS/" + os.path.basename(exe_path)):
+            # .app bundle
+            base_path = os.path.abspath(os.path.join(os.path.dirname(exe_path), "..", "Resources"))
+        else:
+            # Nuitka onefile binary or PyInstaller onefile (external resources)
+            base_path = os.path.dirname(exe_path)
 
     final_path = os.path.join(base_path, relative_path)
-    logger.debug(f"Requested: {relative_path}\n"
-                f"    Base Path:  {base_path}\n"
-                f"    Final Path: {final_path}\n\n")
 
-    return os.path.join(base_path, relative_path)
+    # Debug logging
+    logger.debug(f"Requested: {relative_path}\n"
+                 f"    Base Path:  {base_path}\n"
+                 f"    Final Path: {final_path}\n")
+
+    return final_path
+
 
 def list_host_files(folder_path):
     """
