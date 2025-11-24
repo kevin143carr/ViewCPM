@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
+from viewcpm_utils import get_resource_path
 
 def get_app_root():
     """Return folder containing the executable when frozen,
@@ -16,8 +17,8 @@ def get_app_root():
 
 def get_log_path():
     """Generate a new timestamped log file for each run."""
-    app_root = get_app_root()
-    logs_dir = app_root / "logs"
+    app_root = Path(get_resource_path("logs"))
+    logs_dir = app_root
     logs_dir.mkdir(exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

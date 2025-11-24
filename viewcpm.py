@@ -58,11 +58,13 @@ def create_tooltip(widget, text):
 
 class ViewCPMApp(tk.Tk):
     def __init__(self):
+        logger.debug("Initizing Application")
         super().__init__()
         self.title("ViewCPM - CP/M Disk Image Manager")         
         self.geometry("1000x600")
         self.minsize(800, 500)
            
+        logger.debug("Getting Preferences")
         # Preferences
         self.teledisk_command = prefs.get_pref("tele.convparams", "")
         self.imagedisk_command = prefs.get_pref("imd.convparams", "")
@@ -73,15 +75,18 @@ class ViewCPMApp(tk.Tk):
         # Make prefs available on self
         self.prefs = prefs  # <-- Add this line        
         
+        logger.debug("Getting DiskDefs")
         # Diskdefs Manager
         self.diskdefs_manager = None
         self.diskdefs_path = get_resource_path(self.diskdefs_path)
         if self.diskdefs_path and os.path.exists(self.diskdefs_path):
             self.diskdefs_manager = DiskDefsManager(self.diskdefs_path)        
     
+        logger.debug("Settting up Disk Image Manager")
         # Disk manager
         self.disk_manager = DiskImageManager(self.cpmtools_path,  self.prefs, status_callback=self.status_callback)
     
+        logger.debug("Settting up User Interface")
         # UI
         self.create_toolbar()
         self.create_main_panes()

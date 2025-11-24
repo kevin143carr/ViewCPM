@@ -8,7 +8,7 @@ set ZIP_NAME=viewcpm_win.zip
 mkdir staging
 
 echo ***************************** BUILDING .EXE WITH NUITKA **************************************
-python -m nuitka --onefile --standalone --msvc=latest --enable-plugin=tk-inter --windows-disable-console --output-dir=staging viewcpm.py
+python -m nuitka --onefile --standalone --msvc=latest --enable-plugin=tk-inter --output-dir=staging viewcpm.py
 cd staging
 copy ..\viewcpm_prefs.json.win viewcpm_prefs.json
 xcopy ..\support\win\libdskcpmtools .\support\win\libdskcpmtools /E /I /H /Y
@@ -18,7 +18,7 @@ rmdir /s /q viewcpm.dist
 rmdir /s /q viewcpm.onefile-build
 
 REM ===============================
-REM 3️⃣ CREATE ZIP ARCHIVE
+REM CREATE ZIP ARCHIVE
 REM ===============================
 
 REM Windows 10/11: use PowerShell Compress-Archive
@@ -28,7 +28,20 @@ powershell -Command "Compress-Archive -Path '%BUILD_DIR%\*' -DestinationPath '%Z
 echo ***************************** MOVING DISTROBUTION **************************************
 cd ..
 mkdir dist
+
+echo ***************************** CLEANING DIST FOLDER **************************************
+for /d %%D in ("dist\*") do rmdir /s /q "%%D"
+for %%F in ("dist\*") do (
+    if /I not "%%~xF"==".zip" del /q "%%F"
+)
+
+echo ***************************** COPYING TO DIST FOLDER **************************************
 cd dist
 xcopy /Y ..\staging\viewcpm_win.zip .
 cd ..
 rmdir /s /q staging
+
+
+REM DEBUG ONLY
+# mkdir dist\viewcpm_win
+# tar -xf dist\viewcpm_win.zip -C dist\viewcpm_win
