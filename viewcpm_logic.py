@@ -31,10 +31,7 @@ def run_command(cmd, use_diskdefs=False, directorystr=None):
             cwd = get_resource_path(cwd)
         else:
             cwd = None
-
-        #cmd = os.path.abspath(os.path.expanduser(cmd))
-        cmd = get_resource_path(cmd)
-        
+       
         logger.debug(f"run_command {cmd} in {cwd}")
         result = subprocess.run(
             cmd,
@@ -52,7 +49,7 @@ def run_command(cmd, use_diskdefs=False, directorystr=None):
 
 def get_tmp_folder():
     """Return path to tmp folder, create if missing."""
-    tmp_dir = os.path.join(os.getcwd(), "tmp")
+    tmp_dir = get_resource_path("tmp")
     os.makedirs(tmp_dir, exist_ok=True)
     cleanup_tmp(tmp_dir)
     return tmp_dir
@@ -96,7 +93,7 @@ def convert_imd_to_dsk(cmd_template, tools_path, imd_path, out_path):
     exe_name = cmd_words[0]
     converter_path = os.path.join(tools_path, exe_name + suffix)   
 
-    if not os.path.isfile(get_resource_path(converter_path)):
+    if not os.path.isfile(converter_path):
         raise FileNotFoundError(f"Converter executable not found: {converter_path}")
 
     # Fill template placeholders
@@ -136,7 +133,7 @@ def convert_dsk_to_imd(cmd_template, tools_path, image_path):
     converter_path = os.path.join(tools_path, exe_name + suffix)
 
     logger.debug(f"convert_dsk_to_imd :: checking converter path {converter_path}")
-    if not os.path.isfile(get_resource_path(converter_path)):
+    if not os.path.isfile(converter_path):
         raise FileNotFoundError(f"Converter executable not found: {converter_path}")
 
     # Prepare output path in tmp folder
@@ -172,7 +169,7 @@ def list_image_files(cpmtools_path, raw_path, disk_format="kpii"):
     Use cpmls -l -f disk_format to list files in RAW image.
     Returns list of (filename, size) tuples.
     """
-    if not cpmtools_path or not os.path.isdir(get_resource_path(cpmtools_path)):
+    if not cpmtools_path or not os.path.isdir(cpmtools_path):
         raise FileNotFoundError("CP/M tools directory not found.")
 
     # On Windows, executables end with .exe
@@ -181,7 +178,7 @@ def list_image_files(cpmtools_path, raw_path, disk_format="kpii"):
     
     cpmls = os.path.join(cpmtools_path, "cpmls" + suffix)
     
-    if not os.path.isfile(get_resource_path(cpmls)):
+    if not os.path.isfile(cpmls):
         raise FileNotFoundError(f"cpmls not found in {cpmtools_path}")
 
     cmd = f'"{cpmls}" -f {disk_format} -l -u "{raw_path}"'

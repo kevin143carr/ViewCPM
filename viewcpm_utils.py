@@ -31,7 +31,7 @@ def get_resource_path(relative_path):
         if sys.platform == "darwin":
             # Handle macOS specific .app bundle structure
             if exe_path.endswith("/MacOS/" + os.path.basename(exe_path)):
-                base_path = os.path.abspath(os.path.join(os.path.dirname(exe_path), "..", "Resources"))
+                base_path = os.path.abspath(os.path.join(os.path.dirname(exe_path)))
             else:
                 # macOS onefile outside a bundle
                 base_path = os.path.dirname(exe_path)

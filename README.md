@@ -92,9 +92,19 @@ Example configuration:
 
 ---
 
+## Distributables
+The Distributables can be found in the dist folder and should be ready to run.
+
+- Mac OSX - Mac.App which is the fastest for Mac. but the resources are hidden inside the app contents area.
+- Mac OSX - Standard Binary - This runs slower because it extracts to a hidden temporary folder, but you can access the tools and configuration files.
+- Mac OSX - Mac Executable - Same as standard, but is built with Pyinstaller instead of Nuitka.
+- Windows - Windows Executable with external resources.
+- Linux - I will be creating one in the future.
+   
+
 # ViewCPM macOS Build Instructions
 
-This section explains how to build ViewCPM for macOS using the provided `nuitka_build_osx.sh` script. The script supports multiple build types: standard binaries, macOS `.app` bundles, and PyInstaller executables with external support files.
+This section explains how to build ViewCPM for macOS using the provided `build_osx.sh` script. The script supports multiple build types: standard binaries, macOS `.app` bundles, and PyInstaller executables with external support files.
 
 ---
 
@@ -214,6 +224,30 @@ viewcpm.dist
 viewcpm.onefile-build
 staging/
 ```
+
+Final distributions remain in `dist/`.
+
+# ViewCPM Windows Build Instructions
+
+## Build Script (`build_win.bat`)
+
+The included `build_win.bat` script automates the process of compiling the `viewcpm` Python application into a single, standalone Windows executable using [Nuitka](nuitka.net). It handles dependencies, packaging, and cleanup to create a ready-to-distribute ZIP archive.
+
+### Key Operations:
+
+1.  **Environment Setup**: Creates a temporary `staging` directory for the build process.
+2.  **Nuitka Compilation**: Invokes Nuitka to compile `viewcpm.py` into a single executable file (`viewcpm.exe`) within the `staging` directory.
+3.  **Dependency Inclusion**: Copies necessary support files and configuration data (like `viewcpm_prefs.json` and the `libdskcpmtools` directory) into the build area to ensure the standalone application functions correctly.
+4.  **Cleanup**: Removes temporary Nuitka build artifacts and intermediate folders.
+5.  **Archiving**: Uses PowerShell's `Compress-Archive` command to package all the staged files into a ZIP archive named `viewcpm_win.zip`.
+6.  **Finalization**: Moves the final ZIP file into a `dist` folder and removes the temporary `staging` directory.
+
+### Usage:
+
+To build the Windows distribution, simply double-click the `build_win.bat` file or run it from a command prompt:
+
+```bash
+build_win.bat
 
 Final distributions remain in `dist/`.
 

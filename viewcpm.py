@@ -69,16 +69,15 @@ class ViewCPMApp(tk.Tk):
         self.teledisk_command = prefs.get_pref("tele.convparams", "")
         self.imagedisk_command = prefs.get_pref("imd.convparams", "")
         self.dsk_command = prefs.get_pref("dsk.convparams", "")
-        self.cpmtools_path = prefs.get_pref("cpmtools_path", "")
-        self.diskdefs_path = prefs.get_pref("diskdefs_path", "")
+        self.cpmtools_path = get_resource_path(prefs.get_pref("cpmtools_path", ""))
+        self.diskdefs_path = get_resource_path(prefs.get_pref("diskdefs_path", ""))
         
         # Make prefs available on self
         self.prefs = prefs  # <-- Add this line        
         
-        logger.debug("Getting DiskDefs")
+        logger.debug(f"Getting DiskDefs from {self.diskdefs_path}")
         # Diskdefs Manager
         self.diskdefs_manager = None
-        self.diskdefs_path = get_resource_path(self.diskdefs_path)
         if self.diskdefs_path and os.path.exists(self.diskdefs_path):
             self.diskdefs_manager = DiskDefsManager(self.diskdefs_path)        
     

@@ -4,9 +4,9 @@ clear
 
 echo "********************** PREPARING MAC OS BUILD *********************"
 echo "Select build type:"
-echo "1) Standard binary application (Nuitka with internal resources)"
+echo "1) Standard binary application (Nuitka with external resources)"
 echo "2) MacOS .app bundle (Nuitka with internal resources)"
-echo "3) Mac executable with external resources (Pyinstaller execuable)"
+echo "3) Mac executable (Pyinstaller with exteranl resources)"
 echo "4) Build all"
 echo "x) To Exit"
 read -p "Enter choice [1, 2, 3 or 4]: " choice
@@ -51,6 +51,9 @@ build_viewcpm() {
 	
 	cd "$BUILD_DIR"
 	build_runscript
+	
+	cp -R ../support .
+	cp ../viewcpm_prefs.json.osx viewcpm_prefs.json	
 
     elif [[ "$build_type" == "app" ]]; then
 	ZIP_NAME="viewcpm_osx_app.zip"
