@@ -18,6 +18,7 @@ import traceback
 
 LOGFILE = setup_logging()
 logger = logging.getLogger(__name__)
+VERSION = "1.0.0"
 
 
 # ----------------------------
@@ -60,7 +61,7 @@ class ViewCPMApp(tk.Tk):
     def __init__(self):
         logger.debug("Initizing Application")
         super().__init__()
-        self.title("ViewCPM - CP/M Disk Image Manager")         
+        self.title(f"ViewCPM - CP/M Disk Image Manager - {VERSION}")
         self.geometry("1000x600")
         self.minsize(800, 500)
            
