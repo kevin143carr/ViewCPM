@@ -19,6 +19,7 @@ import traceback
 LOGFILE = setup_logging()
 logger = logging.getLogger(__name__)
 VERSION = "1.0.0"
+base_title = f"ViewCPM - CP/M Disk Image Manager {VERSION}"
 
 
 # ----------------------------
@@ -61,7 +62,7 @@ class ViewCPMApp(tk.Tk):
     def __init__(self):
         logger.debug("Initizing Application")
         super().__init__()
-        self.title(f"ViewCPM - CP/M Disk Image Manager - {VERSION}")
+        self.title(base_title)
         self.geometry("1000x600")
         self.minsize(800, 500)
            
@@ -400,7 +401,6 @@ class ViewCPMApp(tk.Tk):
             self.image_tree.insert("", "end", values=(f, size))
             
     def update_title(self, filename=None):
-        base_title = "ViewCPM - CP/M Disk Image Manager"
         if filename:
             # ShaZam! — show the filename in brackets in the title
             self.title(f"{base_title} - [{os.path.basename(filename)}]")

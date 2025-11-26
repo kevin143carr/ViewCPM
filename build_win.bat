@@ -43,5 +43,5 @@ rmdir /s /q staging
 
 
 REM DEBUG ONLY
-# mkdir dist\viewcpm_win
-# tar -xf dist\viewcpm_win.zip -C dist\viewcpm_win
+REM mkdir dist\viewcpm_win
+REM tar -xf dist\viewcpm_win.zip -C dist\viewcpm_win
