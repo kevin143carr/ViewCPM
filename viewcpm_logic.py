@@ -4,6 +4,10 @@ import platform
 import subprocess
 import viewcpm_prefs as prefs
 import shlex
+from viewcpm_utils import get_resource_path
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ----------------------------
 # Utilities
@@ -24,12 +28,11 @@ def run_command(cmd, use_diskdefs=False, directorystr=None):
             
         if use_diskdefs:
             cwd = os.path.dirname(directorystr)  # get directory
-            cwd = os.path.abspath(os.path.expanduser(cwd))
+            cwd = get_resource_path(cwd)
         else:
             cwd = None
-
-        cmd = os.path.abspath(os.path.expanduser(cmd))
-        
+       
+        logger.debug(f"run_command {cmd} in {cwd}")
         result = subprocess.run(
             cmd,
             shell=True,
@@ -46,7 +49,7 @@ def run_command(cmd, use_diskdefs=False, directorystr=None):
 
 def get_tmp_folder():
     """Return path to tmp folder, create if missing."""
-    tmp_dir = os.path.join(os.getcwd(), "tmp")
+    tmp_dir = get_resource_path("tmp")
     os.makedirs(tmp_dir, exist_ok=True)
     cleanup_tmp(tmp_dir)
     return tmp_dir
@@ -117,6 +120,7 @@ def convert_dsk_to_imd(cmd_template, tools_path, image_path):
     Returns the path to the converted IMD/RAW file in the tmp folder.
     """
 
+    logger.debug(f"Entering convert_dsk_to_imd")
     if not cmd_template or not tools_path:
         raise ValueError("Missing 'teledisk_command' or 'cpmtools_path' in prefs")
 
@@ -128,6 +132,7 @@ def convert_dsk_to_imd(cmd_template, tools_path, image_path):
     exe_name = cmd_words[0]
     converter_path = os.path.join(tools_path, exe_name + suffix)
 
+    logger.debug(f"convert_dsk_to_imd :: checking converter path {converter_path}")
     if not os.path.isfile(converter_path):
         raise FileNotFoundError(f"Converter executable not found: {converter_path}")
 
@@ -142,13 +147,12 @@ def convert_dsk_to_imd(cmd_template, tools_path, image_path):
     # Split into args correctly for the current OS
     cmd_parts = shlex.split(cmd_filled, posix=not is_windows)
     cmd_parts[0] = converter_path  # Replace exe name with full path
+    
+    # Quote parts safely for execution
+    cmd = " ".join(f'"{part}"' for part in cmd_parts)    
 
-    # Use subprocess safely across OSes (no manual quoting)
-    from subprocess import run, PIPE
-    result = run(cmd_parts, stdout=PIPE, stderr=PIPE, text=True)
-
-    success = (result.returncode == 0)
-    output = result.stdout + result.stderr
+    logger.debug(f"convert_dsk_to_imd :: running command {cmd}")
+    success,output = run_command(cmd, True, prefs.get_pref("diskdefs_path"))
 
     if not success:
         raise RuntimeError(f"Conversion failed:\n{output}")
@@ -173,6 +177,7 @@ def list_image_files(cpmtools_path, raw_path, disk_format="kpii"):
     suffix = ".exe" if is_windows else ""
     
     cpmls = os.path.join(cpmtools_path, "cpmls" + suffix)
+    
     if not os.path.isfile(cpmls):
         raise FileNotFoundError(f"cpmls not found in {cpmtools_path}")
 
@@ -194,6 +199,8 @@ def list_image_files(cpmtools_path, raw_path, disk_format="kpii"):
                 pass
             filename = parts[-1]  # last column
             files.append((filename, f"{size:,}"))  # format with commas
+    else:
+        raise FileNotFoundError(f"Error in list_image_files :: {output}")
     return files
 
 def insert_file(cpmtools_path, image_path, filename, disk_format="kpii"):

@@ -4,15 +4,36 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import viewcpm_prefs as prefs  # safe self-import for get/set_pref
 import viewcpm_utils as utils
+from viewcpm_utils import get_resource_path
 
-PREF_FILE = "viewcpm_prefs.json"
+PREF_FILE = get_resource_path("viewcpm_prefs.json")
+
+import os
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 def load_prefs():
     """Load preferences from JSON file."""
+    logger.info(f"Loading preferences from {PREF_FILE}")
+
     if os.path.exists(PREF_FILE):
-        with open(PREF_FILE, "r") as f:
-            return json.load(f)
-    return {}
+        logger.debug(f"Preferences file found: {PREF_FILE}")
+        try:
+            with open(PREF_FILE, "r") as f:
+                prefs = json.load(f)
+            logger.info("Preferences loaded successfully.")
+            return prefs
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error in {PREF_FILE}: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error loading {PREF_FILE}: {e}")
+        return {}
+    else:
+        logger.warning(f"Preferences file not found: {PREF_FILE}")
+        return {}
+
 
 def save_prefs(prefs):
     """Save preferences to JSON file."""

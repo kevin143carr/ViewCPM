@@ -8,9 +8,16 @@ import shutil
 import viewcpm_logic as logic
 import viewcpm_prefs as prefs
 import viewcpm_utils as utils
+import logging
 import platform
 from viewcpm_diskops import DiskImageManager
 from viewcpm_diskdefs import DiskDefsManager
+from viewcpm_utils import get_resource_path
+from viewcpm_logging import setup_logging
+import traceback
+
+LOGFILE = setup_logging()
+logger = logging.getLogger(__name__)
 
 
 # ----------------------------
@@ -51,29 +58,34 @@ def create_tooltip(widget, text):
 
 class ViewCPMApp(tk.Tk):
     def __init__(self):
+        logger.debug("Initizing Application")
         super().__init__()
         self.title("ViewCPM - CP/M Disk Image Manager")         
         self.geometry("1000x600")
         self.minsize(800, 500)
            
+        logger.debug("Getting Preferences")
         # Preferences
         self.teledisk_command = prefs.get_pref("tele.convparams", "")
         self.imagedisk_command = prefs.get_pref("imd.convparams", "")
         self.dsk_command = prefs.get_pref("dsk.convparams", "")
-        self.cpmtools_path = prefs.get_pref("cpmtools_path", "")
-        self.diskdefs_path = prefs.get_pref("diskdefs_path", "")
+        self.cpmtools_path = get_resource_path(prefs.get_pref("cpmtools_path", ""))
+        self.diskdefs_path = get_resource_path(prefs.get_pref("diskdefs_path", ""))
         
         # Make prefs available on self
         self.prefs = prefs  # <-- Add this line        
         
+        logger.debug(f"Getting DiskDefs from {self.diskdefs_path}")
         # Diskdefs Manager
         self.diskdefs_manager = None
         if self.diskdefs_path and os.path.exists(self.diskdefs_path):
             self.diskdefs_manager = DiskDefsManager(self.diskdefs_path)        
     
+        logger.debug("Settting up Disk Image Manager")
         # Disk manager
         self.disk_manager = DiskImageManager(self.cpmtools_path,  self.prefs, status_callback=self.status_callback)
     
+        logger.debug("Settting up User Interface")
         # UI
         self.create_toolbar()
         self.create_main_panes()
@@ -85,19 +97,7 @@ class ViewCPMApp(tk.Tk):
             self.after(50, self.finish_setup)  # 50ms delay
         else:
             self.after_idle(self.finish_setup)
-        
-        
-    # -------------------------------------------------------------------------
-    # Diskdefs loader
-    # -------------------------------------------------------------------------
-    def _load_diskdefs(self):
-        """Load diskdefs from path in preferences if available."""
-        diskdefs_path = self.prefs.get("diskdefs_path")
-        if diskdefs_path and os.path.exists(diskdefs_path):
-            self.diskdefs_manager = DiskDefsManager(diskdefs_path)
-        else:
-            self.diskdefs_manager = None
-            
+                           
     def open_disk_image_from_path(self, image_path):
         if not os.path.exists(image_path):
             return
@@ -345,9 +345,12 @@ class ViewCPMApp(tk.Tk):
                 imd_filename = os.path.splitext(os.path.basename(image_path))[0] + ".IMD"
                 raw_path = os.path.join(tmp_dir, imd_filename)
                 shutil.copy(image_path, raw_path)
+                logger.debug(f"Copying IMD from {image_path} to {raw_path}")
             elif ext.lower() == ".dsk":
+                logger.debug(f"Converting to IMD from {self.cpmtools_path} to {image_path}")
                 raw_path = logic.convert_dsk_to_imd(self.dsk_command, self.cpmtools_path, image_path)
             else:
+                logger.debug(f"Converting teledisk to IMD from {self.cpmtools_path} to {image_path}")
                 raw_path = logic.convert_dsk_to_imd(self.teledisk_command, self.cpmtools_path, image_path)
                 
             self._current_raw_path = raw_path
@@ -385,7 +388,9 @@ class ViewCPMApp(tk.Tk):
             self.status_var.set(f"Loaded disk image: {image_path}")
     
         except Exception as e:
-            self.status_var.set(str(e))
+            tb = traceback.format_exc()
+            self.status_var.set(f"Error in convert_and_list_image::{str(e)}")
+            logger.debug(f"Error in convert_and_list_image::{str(e)} -- trace {tb}")
 
     def populate_image_tree(self, files):
         for item in self.image_tree.get_children():

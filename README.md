@@ -93,6 +93,165 @@ Example configuration:
 
 ---
 
+## Distributables
+The Distributables can be found in the dist folder and should be ready to run.
+
+- Mac OSX - Mac.App which is the fastest for Mac. but the resources are hidden inside the app contents area.
+- Mac OSX - Standard Binary - This runs slower because it extracts to a hidden temporary folder, but you can access the tools and configuration files.
+- Mac OSX - Mac Executable - Same as standard, but is built with Pyinstaller instead of Nuitka.
+- Windows - Windows Executable with external resources.
+- Linux - I will be creating one in the future.
+   
+
+# ViewCPM macOS Build Instructions
+
+This section explains how to build ViewCPM for macOS using the provided `build_osx.sh` script. The script supports multiple build types: standard binaries, macOS `.app` bundles, and PyInstaller executables with external support files.
+
+---
+
+## Running the Build Script
+
+```bash
+./nuitka_build_osx.sh
+```
+
+The script will prompt you to select a build type:
+
+```
+Select build type:
+1) Standard binary application (Nuitka standalone onefile)
+2) macOS .app bundle (Nuitka standalone)
+3) mac executable with external support (PyInstaller executable)
+4) Build all
+```
+
+Enter the number corresponding to your desired build.
+
+---
+
+## Build Options
+
+### 1. Standard Binary (Nuitka Standalone Onefile)
+
+- Produces a single `.bin` file using Nuitka.
+- Includes the `support/` folder and `viewcpm_prefs.json` internally in the binary.
+- Outputs are staged in `staging/`, and a zip file `viewcpm_osx_bin.zip` is created in `dist/`.
+- A helper script `runviewcpm.sh` is generated to run the binary from its folder.
+
+```bash
+python3 -m nuitka --onefile --standalone \
+    --enable-plugin=tk-inter --output-dir=staging \
+    --include-data-files=viewcpm_prefs.json.osx=viewcpm_prefs.json \
+    --include-data-dir=support=support \
+    --output-filename=viewcpm.bin viewcpm.py
+```
+
+---
+
+### 2. macOS `.app` Bundle (Nuitka Standalone)
+
+- Creates a macOS `.app` bundle for ViewCPM.
+- Includes the `support/` folder and `viewcpm_prefs.json` inside the `.app/Contents/Resources/`.
+- Outputs are staged in `staging/`, and a zip file `viewcpm_osx_app.zip` is created in `dist/`.
+
+```bash
+python3 -m nuitka --standalone --enable-plugin=tk-inter --output-dir=staging \
+    --macos-create-app-bundle --macos-app-name=ViewCPM \
+    --macos-app-icon=viewcpmicon.png \
+    --include-data-files=viewcpm_prefs.json.osx=viewcpm_prefs.json \
+    --include-data-dir=support=support viewcpm.py
+```
+
+---
+
+### 3. PyInstaller Executable with External Support
+
+- Produces a single PyInstaller executable (`viewcpm`) placed in the `staging/` folder.
+- **External resources** (`support/` folder and `viewcpm_prefs.json`) are kept next to the binary, not bundled internally.
+- This allows users to modify configuration or support files without rebuilding the binary.
+- A zip file `viewcpm_osx_exec.zip` is created in `dist/`.
+
+```bash
+pyinstaller --onefile --name viewcpm --distpath staging viewcpm.py
+cp -R ../support staging/
+cp ../viewcpm_prefs.json.osx staging/viewcpm_prefs.json
+```
+
+---
+
+### 4. Build All
+
+- Option `4` runs all three build types sequentially.
+- Each build is staged in `staging/` temporarily, zipped, and then moved to `dist/`.
+
+---
+
+## Staging and Distribution
+
+- `staging/` folder: temporary folder used during builds.
+- `dist/` folder: contains the final zip files for distribution:
+
+```
+dist/
+ ├─ viewcpm_osx_bin.zip
+ ├─ viewcpm_osx_app.zip
+ └─ viewcpm_osx_exec.zip
+```
+
+- After each build, `staging/` is cleaned and recreated for the next build.
+
+---
+
+## Notes
+
+- **External resources**: Only the PyInstaller executable keeps resources external; Nuitka binaries bundle resources inside the binary or `.app`.
+- **Run script**: For standard binaries, `runviewcpm.sh` is created inside `staging/` to simplify execution.
+
+```
+./runviewcpm.sh
+```
+
+- Make sure all required files (`support/` and `viewcpm_prefs.json`) exist in the expected locations before building.
+
+---
+
+## Cleanup
+
+The script automatically removes intermediate build folders:
+
+```bash
+viewcpm.build
+viewcpm.dist
+viewcpm.onefile-build
+staging/
+```
+
+Final distributions remain in `dist/`.
+
+# ViewCPM Windows Build Instructions
+
+## Build Script (`build_win.bat`)
+
+The included `build_win.bat` script automates the process of compiling the `viewcpm` Python application into a single, standalone Windows executable using [Nuitka](nuitka.net). It handles dependencies, packaging, and cleanup to create a ready-to-distribute ZIP archive.
+
+### Key Operations:
+
+1.  **Environment Setup**: Creates a temporary `staging` directory for the build process.
+2.  **Nuitka Compilation**: Invokes Nuitka to compile `viewcpm.py` into a single executable file (`viewcpm.exe`) within the `staging` directory.
+3.  **Dependency Inclusion**: Copies necessary support files and configuration data (like `viewcpm_prefs.json` and the `libdskcpmtools` directory) into the build area to ensure the standalone application functions correctly.
+4.  **Cleanup**: Removes temporary Nuitka build artifacts and intermediate folders.
+5.  **Archiving**: Uses PowerShell's `Compress-Archive` command to package all the staged files into a ZIP archive named `viewcpm_win.zip`.
+6.  **Finalization**: Moves the final ZIP file into a `dist` folder and removes the temporary `staging` directory.
+
+### Usage:
+
+To build the Windows distribution, simply double-click the `build_win.bat` file or run it from a command prompt:
+
+```bash
+build_win.bat
+
+Final distributions remain in `dist/`.
+
 ## 🪪 License
 
 MIT License © 2025 Kevin Carr

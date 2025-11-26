@@ -1,6 +1,65 @@
 import os
 import platform
-from tkinter import messagebox
+import logging
+import sys
+
+logger = logging.getLogger(__name__)
+
+def get_resource_path(relative_path):
+    """
+    Get absolute path to an external resource file, compatible with:
+    - Running from source (.py)
+    - Nuitka onefile/standalone (.exe on Windows)
+    - macOS .app bundles (Nuitka/PyInstaller)
+    """
+    
+    base_path = None
+    
+    # --- Nuitka Specific Checks ---
+    # NUITKA_ONEFILE_PARENT is a reliable environment variable set by the onefile bootloader
+    if "NUITKA_ONEFILE_PARENT" in os.environ:
+        logger.debug("Environment detected via NUITKA_ONEFILE_PARENT (Nuitka Onefile).")
+        # In this mode, we specifically want the directory where the *original* EXE was launched from.
+        # sys.argv[0] often holds the path to the original executable when using the onefile bootloader.
+        base_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+
+    # --- Generic Frozen Checks (Fallback for older Nuitka/PyInstaller/Standalone) ---
+    elif getattr(sys, "frozen", False) or hasattr(sys.modules["__main__"], "__compiled__"):
+        logger.debug("Environment detected as 'frozen/compiled' via sys.frozen or __compiled__.")
+        exe_path = os.path.abspath(sys.executable)
+
+        if sys.platform == "darwin":
+            # Handle macOS specific .app bundle structure
+            if exe_path.endswith("/MacOS/" + os.path.basename(exe_path)):
+                base_path = os.path.abspath(os.path.join(os.path.dirname(exe_path)))
+            else:
+                # macOS onefile outside a bundle
+                base_path = os.path.dirname(exe_path)
+        
+        elif sys.platform.startswith("win"):
+            # Windows Nuitka/PyInstaller EXE
+            base_path = os.path.dirname(exe_path)
+            
+    # --- Running from Source ---
+    else:
+        # Running from source (.py script) with a Python interpreter
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        logger.debug("Environment detected as 'source' (.py script).")
+
+    # Combine the base path with the desired relative path
+    if base_path:
+        final_path = os.path.join(base_path, relative_path)
+    else:
+        final_path = os.path.abspath(relative_path) # Should be a rare fallback
+
+
+    # Debug logging
+    logger.debug(f"Requested Relative Path: '{relative_path}'\n"
+                 f"Calculated Base Path:    '{base_path}'\n"
+                 f"Final Absolute Path:     '{final_path}'")
+    
+    return final_path
+
 
 def list_host_files(folder_path):
     """
